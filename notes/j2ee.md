@@ -161,8 +161,18 @@ public class HelloServlet extends HttpServlet {
 Caused by: java.lang.IllegalArgumentException: The servlets named [pages.HelloServlet] and [pages.HelloServlet2] are both mapped to the url-pattern [/test] which is not permitted
 ```
 
-8. 
+8. get info from request object using 
+- 1. getParameters  - single value 
+- 2. getParametersValues - for array
 ```java
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {	
+		response.setContentType("text/html");
+		try(PrintWriter pw = response.getWriter())
+		{
+            pw.print("<h2> Email : " + request.getParameter("email"));
+			pw.print("<h2> Password : " + request.getParameter("password"));
+		}	
+	}
 
 ```
 9. 
