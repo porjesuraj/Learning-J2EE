@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+<!--Write a InputServlet to display 
+user name , Favourite Colors chosen , chosen browser , city & information about client   -->
+
+<form action="client" method="post">
+
+<table style="background-color: blue;margin: auto">
+
+<tr> 
+<td> <label> Name : </label> </td>
+<td> <input type="text" name="name" /> </td>
+</tr>
+
+<tr> 
+<td><label>Favourite color : </label> </td>
+<td> <input type="text" name="color"> </td>
+</tr>
+
+<tr> 
+<td><label>Browser </label> </td>
+<!-- <td> <input type="text" name="browser"> </td> -->
+<td> <select name="browser"> 
+<optgroup label="web browser">
+<option name="chrome"> chrome</option>
+<option name="firefox">firefox</option>
+<option name="safari"> safari</option>
+</optgroup>
+</select>  </td>
+</tr>
+
+<tr> 
+<td>City Name</td>
+<td><input type="text" name="city"> </td>
+</tr>
+
+<tr> 
+<td><input type="submit" name="Login">Send Info </td>
+<td> </td>
+</tr>
+
+</table>
+
+</form>
+
+</body>
+</html>
