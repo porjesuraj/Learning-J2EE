@@ -19,19 +19,6 @@
 
 # day1
 
-
-### to read
-1. j2ee specification 
-2. web server vs application server in case of j2ee? 
-3. why j2ee ? 
-4. why HTTP Servlet abstract class but with 100% concrete functionality?  
-5. 
-
-### notes
-1. Servlet 
-- 
-
-
 ### demo 
 
 1. add external tomcat server to eclipse java 
