@@ -81,23 +81,87 @@ extends GenericServlet
 
 - Likewise, there's almost no reason to override the doOptions and doTrace methods.
 
-5. 
 
+## demo in eclipse 
+5. method to declare suervolate in a dynamic web app
+   
+- 1. using xml 
+-  server deployment tags in web.xml file 
+```xml
+ <!-- server deployment tags -->
+  <servlet>
+  <servlet-name>abc</servlet-name>
+  <servlet-class>pages.HelloServlet2</servlet-class>
+  <load-on-startup>2</load-on-startup>
+  
+  </servlet>
+  <servlet-mapping>
+  <servlet-name>abc</servlet-name>
+  <url-pattern>/test3</url-pattern>
+  <url-pattern>/hello</url-pattern>
+  
+  </servlet-mapping>
+```
+
+- 2. using annotation 
 ```java
+    // URL ://host:port/lab_1.1/test
+	// URI : context path (lab_1.1)
+	// URL Pattern : /test
+
+
+
+@WebServlet(value= {"/test","/test2"},loadOnStartup = 1)
+//WC processes this annotation , at the deployment time and adds the mapping between URL pattern and servlet 
+//WC creates an empty map (Hash Map)
+//key : URL pattern (/test)
+//value : Fully qualified servlet class name 
+
+// this is same in both methods 
+public class HelloServlet extends HttpServlet {
+//todo step 3
+}
 
 ```
-6. 
+- 3. rest of code , in both method
+- need to override method (init,destroy, and service method ) 
 
 ```java
+// this is same in both methods 
+public class HelloServlet extends HttpServlet {
 
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {	
+		System.out.println("in do-get " + Thread.currentThread());
+		// set response content type for the cln broswwer 
+		resp.setContentType("text/html");	
+		// open print writer to send response from servlet --> clnt (text)		
+		try(PrintWriter pw = resp.getWriter())
+		{
+			pw.print("<h1> hello from HelloServlet @" + LocalDateTime.now() + "</h2>"); 
+		}
+	}
+	@Override
+	public void destroy() {
+	
+		System.out.println("in destroy  "  + Thread.currentThread());
+	}
+	@Override
+	public void init() throws ServletException {
+		
+		System.out.println("in init of " + this.getClass().getName() + " " + Thread.currentThread());
+    }	
+}
 ```
-7. having two servlet with same url pattern ,exception comes
 
+7. having two servlet with same url pattern ,gives exception 
 ```java
 Caused by: java.lang.IllegalArgumentException: The servlets named [pages.HelloServlet] and [pages.HelloServlet2] are both mapped to the url-pattern [/test] which is not permitted
 ```
-8. 
 
+8. 
 ```java
 
 ```

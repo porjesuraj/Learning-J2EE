@@ -10,8 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-     // URL ://host:port/Lab_1.1/test
-	// URI : context path (Lab_1.1)
+     // URL ://host:port/lab_1.1/test
+	// URI : context path (lab_1.1)
 	// URL Pattern : /test
 
 

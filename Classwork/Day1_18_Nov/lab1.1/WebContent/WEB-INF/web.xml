@@ -5,4 +5,18 @@
     <welcome-file>Welcome.html</welcome-file>
     
   </welcome-file-list>
+  
+  <!-- server deployment tags -->
+  <servlet>
+  <servlet-name>abc</servlet-name>
+  <servlet-class>pages.HelloServlet2</servlet-class>
+  <load-on-startup>2</load-on-startup>
+  
+  </servlet>
+  <servlet-mapping>
+  <servlet-name>abc</servlet-name>
+  <url-pattern>/test3</url-pattern>
+  <url-pattern>/hello</url-pattern>
+  
+  </servlet-mapping>
 </web-app>
