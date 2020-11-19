@@ -70,7 +70,8 @@ extends GenericServlet
 
 
 ## demo in eclipse 
-5. method to declare suervolate in a dynamic web app
+5. method for deployment of servlet in app 
+-  declare survolate in a dynamic web app
    
 - 1. using xml 
 -  server deployment tags in web.xml file 
@@ -143,7 +144,7 @@ public class HelloServlet extends HttpServlet {
 }
 ```
 
-7. having two servlet with same url pattern ,gives exception 
+7. having two servlet with same url pattern,or without '/' ,gives exception 
 ```java
 Caused by: java.lang.IllegalArgumentException: The servlets named [pages.HelloServlet] and [pages.HelloServlet2] are both mapped to the url-pattern [/test] which is not permitted
 ```
@@ -162,13 +163,155 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response) 
 	}
 
 ```
-9. 
 
+
+# Day2
+
+## to read
+1. overriding form of the method cannot add any new or Broader checked exception
+
+## notes
+
+
+### demos
+
+1. 
+
+- 1. 
 ```java
 
 ```
-10. 
+- 2. 
+```java
 
+```
+- 3. it redirects doesnt print pw given here 
+- as WC clears discard pw buffer , and send redirect response only 
+```java
+try(PrintWriter pw = response.getWriter())
+		{
+			pw.print("<h5> Successfully Login </h5>");
+			// http proto stateless, so new request no data of pre request 
+			pw.print("Details" + request.getParameter("em"));
+			
+		}
+	}
+```
+
+
+2. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+3. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+4. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+
+# Day3
+
+## to read
+
+
+## notes
+
+
+### demos
+
+1. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+
+2. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+3. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+4. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
 ```java
 
 ```
