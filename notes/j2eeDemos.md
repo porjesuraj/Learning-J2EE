@@ -248,6 +248,77 @@ try(PrintWriter pw = response.getWriter())
 # Day3
 
 ## to read
+1. read Interface HttpSession 
+
+## notes
+
+
+### demos
+
+1. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+
+2. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+3. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+4. 
+
+- 1. 
+```java
+
+```
+- 2. 
+```java
+
+```
+- 3. 
+```java
+
+```
+
+# Day4
+
+## to read
 
 
 ## notes

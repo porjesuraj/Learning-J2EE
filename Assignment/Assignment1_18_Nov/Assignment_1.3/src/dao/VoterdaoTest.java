@@ -26,21 +26,6 @@ public class VoterdaoTest implements IVoterDao{
 		this.stmlLogin = this.connection.prepareStatement("select * from voters where email=? and password=?");
 	}
 	
-	/*
-	 * public static void main(String[] args) throws SQLException,
-	 * ClassNotFoundException {
-	 * 
-	 * VoterdaoTest test = new VoterdaoTest(); String email = "rama@gmail.com";
-	 * String pwd = "ram#123"; voters v = test.validateUser(email, pwd) ; if(v !=
-	 * null) {
-	 * 
-	 * System.out.println("user found"); System.out.println(v.toString()); }else
-	 * System.out.println("user not fount");
-	 * 
-	 * 
-	 * }
-	 */
-
 	@Override
 	public voters validateUser(String email, String pwd) {
 		
