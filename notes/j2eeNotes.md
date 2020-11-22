@@ -706,7 +706,7 @@ public interface Executor {
 H.W
 
 
-### Page Navigation Techniques
+### 4. Page Navigation Techniques
 - Page Navigation=Taking user from 1 page to another page.
 - 2 Ways
 1. Client Pull
@@ -763,3 +763,32 @@ H.W
 
 
 
+
+### 5. What is a Servlet Listener(or web application listener)?
+- 1. During the lifetime of a typical web application, a number of events take place.
+- eg : requests are created or destroyed.
+- sessions are created & destroyed
+- Contexts(web apps) are created & destroyed.
+- request or session or context attributes are added, removed, or modified etc.
+
+- 2. The Servlet API provides a number of listener interfaces that one  can implement in order to react to these events.
+
+- eg : Event Listener i/f
+1. ServletRequestListener
+2. HttpSessionListener
+3. ServletContextListener
+
+- Steps
+1. Create a class , implementing from Listener i/f.
+2. Register it with WC
+- 2.1 @WebListener annotation(class level)
+OR
+2.2 XML tags in web.xml
+```xml
+<listener>
+ <listener-class>F.Q cls name of listener</listener-class>
+</listener>
+```
+
+
+# Day5 
