@@ -492,7 +492,7 @@ refer to --session internals & WC Heap pics.
 
 ## notes
 
-### Regarding SERVLET CONFIG	
+### 1. Regarding SERVLET CONFIG	
 
 - A servlet specific configuration object created by a servlet container to pass information to a servlet during initialization.
 
@@ -539,7 +539,7 @@ String getInitparameter(String paramName) : rets the param value.
 
 
 
-### Executor Framework
+### 2. Executor Framework
 
 - Introduced in Java 5.
 
@@ -663,3 +663,46 @@ public interface Executor {
 
 7.  > List<Runnable> shutdownNow()
 - Attempts to stop all actively executing tasks, halts the processing of waiting tasks, and returns a list of the tasks that were awaiting execution.
+
+### 3. Regarding javax.servlet.ServletContext (i/f)
+
+1. Defined in  javax.servlet package.
+2. Who creates its instance  -- WC
+3. When -- @ Web application (=context) deployment time
+####  NOTE : The ServletContext object is contained within the ServletConfig object, which the WC provides the servlet when the servlet is initialized.
+
+4. How many instances ?
+-  one per web application
+
+5. Usages
+- 5.1 Server side logging
+      - API public void log(String mesg)
+- 5.2 To create context scoped attributes
+      - API public void setAttribute(String nm,Object val)
+- NOTE : Access them always in thread safe manner
+
+- 5.3 To access global(scope=entire web application) parameters
+6.  How to add context scoped parameters ?
+
+- In web.xml
+```xml
+<context-param>
+  <param-name>name</param-name>
+      <param-value>value</param-value>
+</context-param>
+```
+7. How to access these params in a Servlet ?
+- (can be accessed from init method onwards)
+1. Get ServletContext  
+- API of GenericServlet
+> ServletContext getServletContext() --method inherited from GenericServlet
+
+2. ServletContext API
+> String getInitparameter(String paramName) : rets the param value.
+- eg : ctx param name : user_name value : abc
+> In the Servlet : getServletContext().getInitparameter("user_name") ---abc
+
+- 5.4 Creating request dispatcher
+- to do 
+
+

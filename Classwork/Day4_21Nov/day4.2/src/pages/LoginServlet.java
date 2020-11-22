@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import javax.jws.soap.InitParam;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -74,7 +75,7 @@ public class LoginServlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		System.out.println("in do-get of "+getClass().getName()+" invoked by "+Thread.currentThread());
 		// set cont type
@@ -89,18 +90,30 @@ public class LoginServlet extends HttpServlet {
 			if (authenticateCustomer == null)
 				pw.print("<h5>Invalid Login , Please <a href='login.html'>Retry</a></h5>");
 			else {
-
-				// success
-				// get HttpSession from WC
-				HttpSession session = request.getSession();
-				// display new user / old
-				System.out.println("from login servlet New User " + session.isNew());
-				// display session id for a client " value of jsessionid cookie
-				System.out.println("Sesison ID " + session.getId());
-				// store validated cust details under session scope
-				session.setAttribute("clnt_info", authenticateCustomer);
-				response.sendRedirect("category");
-				// what will be URL of the NEXT req : http://host:port/day4.1/category
+				pw.print("from login page ...");
+             //   pw.flush(); // commiting the content to clnt  
+				// errr : java.lang.IllegalStateException: Cannot forward after response has been committed
+			
+				// store validated cust details under request scope
+				request.setAttribute("clnt_info", authenticateCustomer);
+				 //client pull
+				//response.sendRedirect("category"); // what will be URL of the NEXT req :
+				//  http://host:port/day4.1/category
+						
+				
+				
+				// Server pull: forward Scenerio : Navigating the client from loginServlet --< category :
+				// in same request
+				// Step 1 :create a ReqDispatcher object to wrap the next page 
+				
+				RequestDispatcher rd = request.getRequestDispatcher("category"); 
+				// 2. Forward the client from login --> category 
+				
+				rd.forward(request, response);
+				// http://localhost:8080/day4.2/validate
+               System.out.println("after forward...");
+               pw.print("content after forward"); // content not printed 
+				
 			}
 
 		} catch (Exception e1) {
