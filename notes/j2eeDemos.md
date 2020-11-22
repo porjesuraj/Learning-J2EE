@@ -319,6 +319,41 @@ try(PrintWriter pw = response.getWriter())
 # Day4
 
 ## to read
+Lab sequence
+
+Common instructions after you import web application in your workspace
+1. Import  project in your workspace
+2. Fix build errors (How R click on project --build path --configure build path --Edit )
+3. Copy your DBUtils under utils package.(remove mine) OR make the changes in web.xml
+
+- In case of problems : follow clean up instructions , explained in theory session
+
+
+1. Import day4.1 .
+-  Follow common instructions
+- Demo of servlet config , init-params & writing DB independent web application(using xml config)
+-  Open : web.xml , DBUtils & LoginServlet
+ 
+2. Import day4.3 . Follow common instructions
+- Revise server pull (Request dispatching : forward scenario)
+- OPen LoginServlet & CatalogServlet
+
+3. Import day4.4 . Follow common instructions
+-  Revise server pull (Request dispatching : include scenario)
+- OPen LoginServlet & CatalogServlet
+
+4. Import day4.5 Follow common instructions
+- Demo to Make web application DB independent (using  ServletContext)
+- (i.e if underlying DB changes ---no changes in java code BUT add DB specific details(JDBC drvr class, dbURL,userName , pwd) in xml based config files)
+- Open : web.xml, DBConnectionManager(listener), DBUtils , DAOs.
+
+5. Solve assignemnt
+
+
+
+
+
+# DAY5 
 
 
 ## notes
