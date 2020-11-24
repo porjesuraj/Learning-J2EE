@@ -792,3 +792,12 @@ OR
 
 
 # Day5 
+
+
+# Day6
+
+
+### to read 
+
+1. Post/Redirect/Get (PRG) 
+- is a web development design pattern that lets the page shown after a form submission be reloaded, shared, or bookmarked without ill effects, such as submitting the form another time.

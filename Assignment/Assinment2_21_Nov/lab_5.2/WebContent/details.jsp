@@ -11,7 +11,7 @@
 <h5> Successfully login ...</h5>
 
 <h4> Your details : ${requestScope.user_details}</h4>
-<h4> Session scope :${requestScope}</h4>
+<h4> Request scope :${requestScope}</h4>
 
 <% 
  session.setAttribute("user", request.getAttribute("user_details"));

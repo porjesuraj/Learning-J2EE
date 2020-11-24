@@ -14,5 +14,7 @@
 
 <h5> Page  : <%= page %> </h5>
 <h5> PagecONTEXT  : <%= pageContext %></h5>
+<%-- pageContext.getRequest().getContextPath() --%>
+<h5> Context path :${pageContext.request.contextPath} </h5>
 </body>
 </html>
