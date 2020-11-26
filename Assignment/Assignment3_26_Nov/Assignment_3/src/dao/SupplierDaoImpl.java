@@ -6,6 +6,10 @@ import org.hibernate.*;
 
 import static utils.HibernateUtils.getSf;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
 public class SupplierDaoImpl implements ISupplierDao {
 
 	@Override
@@ -41,6 +45,41 @@ public class SupplierDaoImpl implements ISupplierDao {
 		
 		
 		return sup;
+	}
+
+	@Override
+	public List<Supplier> getAllSupplier(LocalDate date, double regAmount) {
+	
+		List<Supplier> suppliers = null;
+	String jpql = "select s from Supplier s where s.regDate > :dt and s.regAmount < :amt"; 
+		
+		//String jpql = "select s from Supplier s where s.regAmount < amt"; 
+		   Session session = getSf().getCurrentSession();
+			
+		    // begin trans 
+		    
+		  Transaction tx = session.beginTransaction(); 
+		
+		try {
+			
+			 
+			suppliers = session.createQuery(jpql,Supplier.class)
+			  .setParameter("dt",date )
+			  .setParameter("amt",regAmount)
+			  .getResultList();
+			
+			tx.commit();
+		} catch (HibernateException e) {
+		
+			if(tx != null)
+				tx.rollback();
+			throw e; 
+		}
+		
+		
+		
+		
+		return suppliers;
 	}
 
 }
