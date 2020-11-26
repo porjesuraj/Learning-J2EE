@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.management.relation.Role;
+
 public class SupplierDaoImpl implements ISupplierDao {
 
 	@Override
@@ -80,6 +82,38 @@ public class SupplierDaoImpl implements ISupplierDao {
 		
 		
 		return suppliers;
+	}
+
+	@Override
+	public List<Supplier> applyDiscount(double discount, LocalDate regDate) {
+	
+		List<Supplier> Suppliers = null;
+		String jpql = "select s from Supplier s where s.regDate < :dt and s.role=:rl";// select jpql
+		// session from SF : getCurntSession
+		Session session = getSf().getCurrentSession();
+		// begin tx
+		Transaction tx = session.beginTransaction();
+		try {
+			// get list of selected Suppliers : create query --set IN params --exec
+			Suppliers = session.createQuery(jpql, Supplier.class)
+					.setParameter("dt", regDate).
+					setParameter("rl", pojos.Role.VENDOR)
+					.getResultList();//Suppliers : list of persistent pojos.
+		
+			
+			Suppliers.forEach(s->s.setRegAmount(s.getRegAmount() - discount));
+			
+			
+			tx.commit();
+		} catch (HibernateException e) {
+			if (tx != null)
+				tx.rollback();
+			// re throw exception to caller
+			throw e;
+		}
+		return Suppliers;
+		
+	
 	}
 
 }
