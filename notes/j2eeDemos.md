@@ -1272,3 +1272,8 @@ public static void main(String[] args) {
 		
 	}
 ```
+insert into suppliers values(2,"raj@gmail.com","1234",200,'2018-1-1',"VENDOR");
+
+insert into suppliers values(3,"ram@gmail.com","ram#123",1000,'2014-1-1',"VENDOR");
+
+insert into suppliers values(4,"sam@gmail.com","sam#123",500,'2012-1-1',"VENDOR");
