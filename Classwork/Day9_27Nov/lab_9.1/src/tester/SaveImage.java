@@ -14,8 +14,6 @@ public class SaveImage {
 
 	public static void main(String[] args) {
 		
-		// Testing bootstrapping of hibernate configuration (creating singleton n 
-		// immutable instance of SessionFactory(sf)
 		
 		try(org.hibernate.SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
 			

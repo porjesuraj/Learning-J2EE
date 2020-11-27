@@ -1645,17 +1645,418 @@ System.out.println("session api status " + dao.testSessionApi(u1));
 
 	}
 ```
-12. 
+
+12.saving image to DB 
 
 - dao 
 ```java
 
+import org.apache.commons.io.FileUtils;
+import org.hibernate.*;
+	@Override
+	public String saveImage(int userId, String fileName) throws Exception {
+		String msg="Saving image failed....";
+		//validate file : check if its readable existing data file 
+		// create instance of java.io.File 
+		
+		File file = new File(fileName); 
+		
+		if(file.exists() && file.isFile() && file.canRead())
+		{
+			
+			//session
+			Session session=getSf().getCurrentSession();
+			//tx
+			Transaction tx=session.beginTransaction();
+			try {
+				User user = session.get(User.class,userId);
+				
+				if(user != null)
+				{
+					// user : Pers
+					// method : read binary file and return s content it byte[] n closes file 
+					user.setImage(FileUtils.readFileToByteArray(file));// modifying state of persistent pojo
+					
+					msg = "image saved to db ...";
+				}
+				
+				tx.commit(); // hibernate perform  auto dirty check : update query  :close session --> conn returnds to pool
+			}catch (RuntimeException e) {
+				if (tx != null)
+					tx.rollback();// session closed
+				// --db cn rets to the pool , L1 cache is destroyed
+				throw e;
+			}
+			
+		}
+		
+		
+		return msg;
+	}
 ```
 
 - main 
 ```java
-
+public static void main(String[] args) {
+		
+		
+		try(org.hibernate.SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
+			
+			// dao instance 
+			
+			UserDaoImpl dao = new UserDaoImpl(); 
+			
+			
+			System.out.println("Enter User id and File Name along with path");
+			
+			System.out.println(dao.saveImage(sc.nextInt(), sc.next()));
+			
+			System.out.println("cntd");
+			
+			
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		
+	}
 ```
 
 # day 9 
 
+## demo 
+
+1. demo on joins
+
+- pojo for course 
+
+```java
+@Entity
+@Table(name = "courses_tbl")
+public class Course {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "cid")
+	private Integer courseId;
+	@Column(length = 20,unique = true)
+	private String name;
+	private int capacity;
+	@Column(name="start_date")
+	private LocalDate startDate;
+	@Column(name="end_date")
+	private LocalDate endDate;
+	private double fees;
+	
+	// one to many : , bi directional association  between two entities : onse sid eof asso : 
+	// parent : and non -owning (inverse ) side of association 
+	@OneToMany(mappedBy ="selectedCourse", cascade = CascadeType.ALL,orphanRemoval = true)
+	private List<Student> students=new ArrayList<>();
+	
+	//def constr
+	public Course() {
+		System.out.println("in course cnstr");
+	}
+	
+	//add all s/g
+
+
+	// add helper method : for two reasons :
+	//1. to support adding (student details ) 
+	// 2. to remove (student details)
+	// Optional : Recommended
+	
+	// add student detial to a course 
+	public void addStudent(Student s)
+	{
+		students.add(s); // adding parent ---> child
+		
+		s.setSelectedCourse(this); // child ---> parent 
+		
+	}
+	
+	// remove student details 
+	public void removeStudent(Student s)
+	{
+		students.remove(s); // removing  parent ---> child
+		
+		s.setSelectedCourse(null);// removing child ---> parent
+		
+	}
+	
+	
+	
+	
+	@Override
+	public String toString() {
+		return "Course [courseId=" + courseId + ", name=" + name + ", capacity=" + capacity + ", startDate=" + startDate
+				+ ", endDate=" + endDate + ", fees=" + fees + "]";
+	}
+	
+	
+	
+	
+	
+}
+
+    
+```
+
+- pojo for Student 
+
+```java
+
+@Entity
+@Table(name="students_tbl")
+public class Student {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "student_id")
+	private Integer studentId;
+	@Column(length = 20,unique = true)
+	private String email;
+	@Column(length = 20)
+	private String name;
+	
+	// bi - directional association between entities 
+	// many side of association  and owning side(since it has FK column) 
+	@ManyToOne
+	@JoinColumn(name = "c_id",nullable = false) // constraint : Not null : optional but recommended
+	private Course selectedCourse;
+	public Student() {
+		System.out.println("in student cnstr");
+	}
+	public Student(String email, String name) {
+		super();
+		this.email = email;
+		this.name = name;
+	}
+	//all s/g
+
+	@Override
+	public String toString() {
+		return "Student [studentId=" + studentId + ", email=" + email + ", name=" + name + "]";
+	}
+	
+	
+	
+
+}
+
+            
+```
+
+2. for course related
+- 1. for  launchCourse
+- dao 
+```java
+@Override
+	public String launchCourse(Course c) {
+		
+
+		// session 
+		
+	       Session session = getSf().getCurrentSession();
+		
+	       String msg = "Launching course failed";
+		// begin trans 
+	       
+        	 Transaction tx = session.beginTransaction(); 
+		
+        	 try {
+        		 // c : Transient 
+        		 session.persist(c); // Persistent 
+                           		 
+        		 
+        		 tx.commit(); // dirty checking : check : insert query fired , session closed 
+				
+        		 msg = " Launched course with course id " + c.getCourseId(); 
+        		 
+			} catch (RuntimeException e) {
+				
+				if(tx != null)
+			    tx.rollback();
+			 throw e; 
+			} 
+		return msg;
+	}
+```
+
+- tester
+```java
+public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable instance of SessionFactory (SF)
+		try (SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
+			CourseDaoImpl courseDao = new CourseDaoImpl();
+			System.out
+					.println("Enter course details : name,capacity,strt_date,end_date(yr-mon-day with 0 prefix),fees");
+			// create transient pojo n pass it to dao layer for auto persistence
+			Course c1 = new Course(sc.next(), sc.nextInt(), parse(sc.next()), 
+					parse(sc.next()), sc.nextDouble());
+			
+			// accept 3 students details , who want to enroll in this course 
+			
+			
+			for (int i = 0; i < 3; i++) {
+				
+				System.out.println("Enter student detials : email and name ");
+				
+				Student s = new Student(sc.next(), sc.next());
+				
+				// add student  reference in arraylist 
+				/*
+				 * c1.getStudents().add(s); // course ---> student
+				 * 
+				 * s.setSelectedCourse(c1); // student ---> course
+				 */		
+				
+				c1.addStudent(s); // invoking helper /convinience method 
+				
+				
+				
+			}
+			
+			System.out.println("status " + courseDao.launchCourse(c1));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+```
+
+- 2. for  
+- dao 
+```java
+@Override
+	public String cancelCourse(int courseId) {
+		
+		String msg = "Course cancellation failed"; 
+	       Session session = getSf().getCurrentSession();
+		
+		// begin trans 
+	       
+     	 Transaction tx = session.beginTransaction(); 
+		
+     	 try {
+     		 // get course detail from course id
+     		 
+     	Course c = session.get(Course.class, courseId); 
+     		 
+     	if(c != null)
+     	{
+     		// delete course details 
+     		session.delete(c); // REMOVED (not yet gone from L1 cache or DB ) : simply marked for removal 
+     		
+     	}
+     	
+     	
+     		 tx.commit(); // delete query 
+				
+     		msg = "Course with name " + c.getName() + "cancelled ... "; 
+     		 
+			} catch (RuntimeException e) {
+				
+				if(tx != null)
+			    tx.rollback();
+			 throw e; 
+			} 
+     	 
+		
+		
+		
+		return msg;
+	}
+```
+
+- tester
+```java
+public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable instance of SessionFactory (SF)
+		try (SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
+		
+			StudentDaoImpl dao = new StudentDaoImpl(); 
+			System.out
+					.println("Enter students email and course name , to cancel admission ");
+			// create transient pojo n pass it to dao layer for auto persistence
+			
+			System.out.println("status " + dao.cancelStudentAdmission(sc.next(), sc.next()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+```
+
+3. for student related
+
+- dao 
+```java
+	@Override
+	public String cancelStudentAdmission(String studentEmail, String courseName) {
+		String msg = "Cancelling admission failed";
+
+		String jpqlStudent = "select s from Student s where s.email=:email";
+
+		String jpqlCourse = "select c from Course c where c.name=:nm";
+
+		Session session = getSf().getCurrentSession();
+
+		// begin trans
+
+		Transaction tx = session.beginTransaction();
+
+		try {
+
+			// get student details from its email
+
+			Student s = session.createQuery(jpqlStudent, Student.class).setParameter("email", studentEmail)
+					.getSingleResult();
+
+			// s: persistent
+
+			// get course details from its name
+
+			Course c = session.createQuery(jpqlCourse, Course.class).setParameter("nm", courseName).getSingleResult();
+
+			// c : PERSISTENT
+
+			c.removeStudent(s);// helper method to delink bi dir association between course and student
+
+			tx.commit();
+			msg = s.getName() + "'s admission cancelled ... ";
+
+		} catch (RuntimeException e) {
+
+			if (tx != null)
+				tx.rollback();
+			throw e;
+		}
+
+		return msg;
+	}
+```
+
+- tester
+
+```java
+public class CancelStudentAdmission {
+
+	public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable instance of SessionFactory (SF)
+		try (SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
+		
+			StudentDaoImpl dao = new StudentDaoImpl(); 
+			System.out
+					.println("Enter students email and course name , to cancel admission ");
+			// create transient pojo n pass it to dao layer for auto persistence
+			
+			System.out.println("status " + dao.cancelStudentAdmission(sc.next(), sc.next()));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+```
