@@ -816,7 +816,172 @@ public class RegisterNewUser {
 # day 8 
 
 ## to read
+Steps
 
+1. Details of HibernateUtils
+- Need -- to supply singleton , immutable instance of SF
+- How  ? --static init block.
+- 1. Create Service(JPA) registry instance,using its builder class.
+  - How  ?
+ > ServiceRegistry reg=new StandardServiceRegistryBuilder().configure().build();
+ - configure() --- hib will read hibernate.cfg.xml & process its instrs.
+
+- 2. Build SF from Metadata. For MetaData , create MetaDataSources instance.
+SessionFactory sf=new MetadataSources(reg).buildMetaData().buildSessionFactory();
+
+
+
+2. Create User POJO to represent a user in an application
+- Data members
+ - userId (PK) ,name,email,password,role(enum),confirmPassword, regAmount; LocalDate/Date regDate;byte[] image;
+- Rules on Hibernate managed POJO / Entity
+- Is it mandatory for POJO class to imple Serializable ? NO
+- POJO's unique ID property should be Serializable : eg : int , long ,Integer,Long, String, Date...
+
+3. Prog has to supply mapping (ORM) instructions to Hibernate
+- 2 ways 
+- 1. XML tags
+  - Per POJO : supply pojo.hbm.xml : mapping instructions
+
+- 2.  annotations : preferred approach
+  - JPA compliant : javax.persistence : prefer this
+  + hibernate annotations : org.hibernate.annotations
+ - Annotate it. 
+- Package : javax.persistence
+- @Entity : Mandatory : cls level
+- @Id : Mandatory : field level or property (getter) : PK
+
+- @Table(name="tbl_name) : to specify table name n more
+- @GeneratedValue : to tell hib to auto generate ids
+- auto / identity(auto incr : Mysql) / table / sequence(oracle)
+- eg : @Id => PK 
+- @GenertedValue(strategy=GenarationType.IDENTITY) => auto increment
+
+- @Column(name,unique,nullable,insertable,updatable,length,columnDefinition="double(8,2)") : for specifying col details
+- @Transient : Skipped from persistence(no col will be generated in DB table)
+- @Temporal : java.util.Date , Calendar , GregorianCalendar LocalDate(date) ,LocalTime(time) ,  LocalDateTime (timestamp/datetime) : no temporal anno.
+- @Lob : BLOB(byte[])  n CLOB(char[]) : saving / restoring large bin /char data to/from DB
+- @Enumerated (EnumType.STRING): enum (def : ordinal : int)
+
+
+4. Add <mapping class="POJO.class"/> in hibernate.cfg.xml
+
+5. Create DAO i/f & write its implementation class 
+- Hib based DAO impl class
+1. No data members ,constructor , cleanup
+2. Directly add CRUD methods.
+3 Steps
+- 1. Get hib session from SF
+- API of org.hibernate.SessionFactory
+- public Session openSession() throws HibernateException
+OR
+- public Session getCurrentSession() throws HibernateException
+- 2. Begin a Transaction
+- API of Session
+- public Transaction beginTransaction()throws HibernateException
+
+- 3. 
+```java
+ try {
+  perform CRUD using Session API (eg : save)
+  commit the tx.
+   } catch(HibernateException e)
+   {
+      roll back tx.
+      re throw the exc to caller
+   } finally {
+      close session --destroys L1 cache , pooled out db cn rets to the pool.
+   }
+```
+
+- 4. Refer to Hibernate Session API 
+- (hibernate api-docs & readme : hibernate session api)
+
+   - 1. Create main(..) based Tester & test the application.
+
+- 5.  Add a breakpoint before commit , observe n conclude.
+
+7. Replace openSession by getCurrentSession
+
+8. Objective : Get user details
+I/P : user id
+API : session.get
+
+9. Confirm L1 cache
+by invoking session.get(...) multiple times.
+
+10. Hibernate POJO states :
+transient , persistent , detached.
+
+11. Objective : Display all user details
+
+- 1.  Solve it using HQL(Hibernate query language)/JPQL (Java Persistence Query Language)
+Object oriented query language, where table names are replaced by POJO class names & column names are replaced by POJO property names.
+- eg :
+- sql -- select * from users
+- hql -- from User
+- jpql -- select u from User u
+- u -- alias (POJO ref)
+
+- 2. Create Query Object --- from Session i/f
+> <T> org.hibernate.query.Query<T> createQuery(String jpql,Class<T> resultType)
+- T --result type.
+- 3. To execute query
+- Query i/f method
+> public List<T> getResultList() throws HibernateException
+- --Rets list of PERSISTENT entities.
+
+- eg :
+-  List<User> users=session.createQuery("select u1 from User u1",User.class).getResultList();
+
+
+12. Objective : 
+- Display all users registered between strt date n end date & under a specific role
+- eg : sql = select * from users where reg_dt between ? and ? and user_role=?
+1. jpql ="select u from User u where u.regDate between :begin and :end and u.role=:rl"
+
+- Passing named  IN params to the query
+- Query i/f method
+> public Query<T> setParameter(String paramName,Object value) throws HibernateException.
+
+- eg : List<User> users=session.createQuery(jpql,User.class).setParameter("begin",beginDate).setParameter("end",endDate).setParameter("rl",role).getResultList();
+
+15. Objective : 
+- 1. Display all user names registered between strt date n end date & under a specific role
+
+- 2.  Display all user names,reg amount,reg date registered between strt date n end date & under a specific role
+1.  Objective : User login
+- API : getSingleResult (to be done in lab)
+
+
+- 3.  Update 
+Objective : 
+1. Change password
+- i/p --user id , new pass
+- eg : get
+
+2. Apply discount to reg amount , for all users , reged before a specific date.
+- i/p -- discount amt, reg date
+- String jpql="update User u set u.regAmount=u.regAmount-:disc where u.regDate < :dt";
+
+- 1. Query API
+> public int executeUpdate() throws HibernateException
+- -use case --DML
+- 2. Session API
+> public Query<T> createQuery(String jpql) throws HibernateException
+- jpql -- DML
+
+
+18. Un subscribe user
+- i/p user id
+- o/p user details removed from DB
+
+19. H.W
+- Objective --delete vendor details for those vendors reg date > dt.
+- via Bulk delete
+- String jpql="delete from Vendor v where v.regDate > :dt";
+
+20. Save n restore images to / from DB
 
 ## demo on JPA 
 
@@ -1240,6 +1405,17 @@ public static void main(String[] args) {
 		// no null checking is required : since methods throws exception in case no reuslt found 
 		// u : PERSISTENT : exist in L1 cache , exist in DB
 		u.setPassword(newPwd); // abcd : modifying state of Persistent POJo 
+
+			//session.evict(u); 
+			// clears u from L1 cache , u : DETACHED
+		
+		//	session.clear();
+		// clear entire L1 cache (i.e all persistent entities are unbounded from L1 cache
+		 System.out.println("L1 cache contains" + session.contains(u));
+
+
+
+
 		tx.commit(); // hb  perform auto dirty checking : detects change : update,session close 
 		// db conn returnds to the pool, L1 cache is destroyed 
 		msg = "password changed successfully"; 	
@@ -1272,8 +1448,214 @@ public static void main(String[] args) {
 		
 	}
 ```
-insert into suppliers values(2,"raj@gmail.com","1234",200,'2018-1-1',"VENDOR");
 
-insert into suppliers values(3,"ram@gmail.com","ram#123",1000,'2014-1-1',"VENDOR");
 
-insert into suppliers values(4,"sam@gmail.com","sam#123",500,'2012-1-1',"VENDOR");
+<h2> done on day 9 </h2>
+
+9.  Unsubscibe user 
+i/p  : email n password
+
+
+- dao 
+```java
+@Override
+	public String unsubscribeUser(String email, String password) {
+		String mesg="User un subscription failed...";
+		// add jpql : to authenticate user
+		String jpql = "select u from User u where u.email=:em and u.password=:pass";
+		// session
+		Session session = getSf().getCurrentSession();
+		// tx
+		Transaction tx = session.beginTransaction();
+		try {
+			// validate user
+			User u = session.createQuery(jpql, User.class).setParameter("em", email).
+					setParameter("pass", password)
+					.getSingleResult();
+			//u : PERSISTENT
+			//Session API : public void delete(Object o)
+			session.delete(u);//u : is marked for removal, neither  gone from L1 cache nor DB : REMOVED
+			tx.commit();//dirty chking : delete query , session is closed : db cn rets to the pool , L1 cache is destroyed 
+			//entity is removed from cache
+			mesg="User "+u.getName()+" un subscribed...";
+		} catch (RuntimeException e) {
+			if (tx != null)
+				tx.rollback();// session closed
+			// --db cn rets to the pool , L1 cache is destroyed
+			throw e;
+		}
+		// u : TRANSIENT : exists only in java heap
+		return mesg;
+	}// user object is marked for garbage collection
+
+```
+
+- main 
+```java
+public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable singleton instance of SessionFactory (SF)
+		try(SessionFactory sf=getSf();Scanner sc=new Scanner(System.in))
+		{
+			//dao instance 
+			UserDaoImpl dao=new UserDaoImpl();
+			System.out.println("Enter User email n pwd");
+			System.out.println(dao.unsubscribeUser(sc.next(), sc.next()));
+			System.out.println("cntd....");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+```
+
+10. save vs persist
+saveOrUpdate
+merge
+
+- dao 
+```java
+@Override
+	public String testSessionApi(User user) {
+String msg = "User reg failed";
+		
+		// instance of  user  :TRANSIENT (not in L1 cache and not in DB) :EXISTS  only in java heap 
+		
+		
+		//1 .get session from sf  :openSession 
+		Session session = getSf().getCurrentSession();   // new session , empty cache 
+	   
+	  Transaction tx = session.beginTransaction(); 
+	  
+	  // 3.try catch block for trans
+	  
+	  try {
+		  // insert new users info 
+		 
+		//session.persist(user);; // user : PERSISTENT (only added in L1 cache  : not yet part of DB  
+		  session.saveOrUpdate(user);
+		  
+		  System.out.println("generated id " + user.getUserId());
+		  
+		  tx.commit(); 
+		  
+		msg = "User registered with ID" + user.getUserId(); 
+	
+	} catch (RuntimeException e) {
+		// TODO: handle exception
+		// roolback trx n re throw the exc to the caller 
+	
+		
+		if(tx != null)
+		{
+			tx.rollback();
+			// session is implicitely closed here i.e db conn returns to pool and L1 cache is destroyed
+		}
+		throw e; 
+	}
+	
+	  
+	  
+		return msg; // user : DETACHED : here L1 cache user is destroyed , but it exists in DB
+	}
+	
+```
+
+- main 
+```java
+public static void main(String[] args) {
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd"); 
+		
+try(org.hibernate.SessionFactory sf = getSf() ; Scanner sc = new Scanner(System.in);)
+{
+System.out.println("Enter user details : name,email,password,confirmPassword,role,regAmount,regdate");
+			
+// create a transient POJO (not yet persistent )
+User u1 = new User(sc.next(), sc.next(), sc.next(), sc.next(), Role.valueOf(sc.next().toUpperCase()), sc.nextDouble(),sdf.parse(sc.next()) ); 
+// u1 : exists in java Heap : TRANSIENT 
+// create dao instance n invoke method 
+		  
+	// u1 id : null
+	u1.setUserId(222);
+			
+//u1.setUserId(1234); // not existing in DB 
+System.out.println("user id " + u1.getUserId()); // null 
+	UserDaoImpl dao = new UserDaoImpl();
+
+System.out.println("session api status " + dao.testSessionApi(u1));
+		
+} catch (Exception e) {
+// TODO: handle exception
+	e.printStackTrace();
+		}
+		
+	}
+```
+
+11. BulkUpdate (refer to hibernate session api readme)
+- as here 1 select query + 10 update query are fired 
+- so use executeUpdate() method for bulk update for single (unrelated) table (no joins).  
+- it returns update count
+-  not recommended ,
+     - as bypass L1 cache 
+     -  cascade not supported
+     -  does not support optimistic locking  
+- dao 
+```java
+@Override
+	public String bulkUpdateUsers(Date date, double discount) {
+		String mesg="bulk updation failed...";
+		//1 : update jpql
+		String jpql="update User u set u.regAmount=u.regAmount-:disc where u.regDate < :dt";
+		//session
+		Session session=getSf().getCurrentSession();
+		//tx
+		Transaction tx=session.beginTransaction();
+		try {
+			int updateCount=session.createQuery(jpql).
+					setParameter("disc", discount).setParameter("dt", date).executeUpdate();
+			tx.commit();//update query , empty L1 cache is destroyed , cn rets to the pool.
+			mesg=updateCount+" users updated...";
+		}catch (RuntimeException e) {
+			if (tx != null)
+				tx.rollback();// session closed
+			// --db cn rets to the pool , L1 cache is destroyed
+			throw e;
+		}
+		return mesg;
+	}
+```
+
+- main 
+```java
+	public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable singleton instance of SessionFactory (SF)
+		SimpleDateFormat sdf=new SimpleDateFormat("yyyy-MM-dd");
+		try(SessionFactory sf=getSf();Scanner sc=new Scanner(System.in))
+		{
+			//dao instance 
+			UserDaoImpl dao=new UserDaoImpl();
+			System.out.println("Enter reg date n discount");
+			System.out.println(dao.bulkUpdateUsers(sdf.parse(sc.next()), sc.nextDouble()));
+			System.out.println("cntd....");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+```
+12. 
+
+- dao 
+```java
+
+```
+
+- main 
+```java
+
+```
+
+# day 9 
+

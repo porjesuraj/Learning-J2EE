@@ -1880,25 +1880,6 @@ Hibernate supports annotations, apart from XML
  - The Session interface wraps a JDBC connection, which can be user-managed or controlled by Hibernate.
 
 
-### 8. Hibernate Session 
-
-1. A Hibernate Session  is a set of managed entity instances that exist in a particular data store. 
-
-2. Managing an Entity Instances Life Cycle
-
-You manage entity instances(or POJOs) by invoking operations on the entity/POJO  using EntityManager/Session instance. 
-
-Entity instances are in one of four states  (2 imp aspects of it : its asso. with the hibernate session & sync of its state with the underlying DB)
-
-States : new or transient , managed or persistent, detached, removed.
-
-New entity instances have no persistent identity and are not yet associated with a hib. session (transient)
-
-Managed entity instances have a persistent identity and are associated with a hib. session.(persistent : via save() or saveOrUpdate()) Changes to DB will be done when tx is commited.
-
-Detached entity instances have a persistent identity and are not currently associated with a persistence context/Hib session.
-
-Removed entity instances have a persistent identity, are associated with a persistent context and are scheduled for removal from the data store.(removed via  session.delete(obj))
 
 
 
@@ -1910,56 +1891,103 @@ Removed entity instances have a persistent identity, are associated with a persi
 
 1. oper session vs getCUrrent session ? in Hibernate 
 
+
+## Revise
+
+1. What is Hibernate?
+- Complete solution to manage automatic persistence in DB in Java.
+- ORM tool
+- JPA implementor
+- 1. JPA : J2EE specs (javax.persistence)
+- 2. Hibernate : JPA implementor
+- 3. Hibernate : persistence provider
+- 4. Other persistence provider : iBatis,Kodo, EclipseLink...
+- 5. Spring Boot frmwork : def persistence provider = Hibernate
+- 6. Open source framework : founded by Gavin King
+-  Intermediate layer between Java app n DB
+
+- Which of the following layers are currently hibernate specific ?
+   - DAO : org.hibernate.Session, SF , Transaction... : YES (native hibernate APIs)
+   - POJO : javax.persistence : NO 
+
+2. Why Hibernate ?
+- 1. open source and light weight
+- 2. supports cache (L1 , L2 , query cache) : for  faster performance
+- 3. auto table creation.
+- 4. simplifies join queries
+- 5. 100 % DB independent (
+   - HQL/JPQL ---Hibernate :
+   -  DB dialect -- converts queries in DB specific syntax)
+   - Hibernate 5.x onwards : no need to specifiy DB dialect property in config file
+   -   (hibernate.cfg.xml : run time classpath)
+   - REMOVE this property from config file.
+- 6. Hibernate developer doesn't have to go to DB level 
+    -  i.e  DB ,table ,cols , sql
+    - to set up the db conn , prepare stmts (st/pst/cst)
+    - exec queries : process ResultSeT : convert it into pojo / collection of POJOs
+- All of above will be automated by Hibernate
+- 7.  JDBC : 
+-   fixed db conn.(new separate conn/ call to DriverManager.getConnection)
+1.  Hibernate :
+- 1.  connection pool : 
+ - when : hib booting time
+ - at the time of creation of SF
+    - at the time confgure() -- hibernate.cfg.xml   is parsed : hibernate.connection pool_size= 20 (max size)
+- 2.  In DAO layer :
+ -  open session n begin tx : db conn is pooled out -- wrapped in Session instance n returned to caller.
+ - for CRUD work 
+ - where either commit/rollback
+- 3.  finally :
+ -  session .close ---pooled out cn simply rets to the pool : 
+ -  so that the same conn can be REUSED for some other request.
+
+- 8. Solve the important issue of  Impedance mismatch () 
+- 1. Object world (java objs in heap , inheritace , association , polymorphism)
+- 2.  RDBMS (table , row cols ,E-R,FKs,join tables...)
+ -so Entity Relations , to connect object to RDBMS world 
+
+- 9. Exception translation mechanism
+- Hibernate translates checked SQL excs  to un checked hibernate excs
+-  (org.hibernate.HibernateException) :
+-   so that prog is not forced to handle the same. 
+
+
+3. Hibernate architecture
+- hibernate.cfg.xml
+- hibernate.hbm2ddl.auto=update
+ - Chks if table is not yet created for a POJO : create a new table.
+ -  BUT if table alrdy exists : continues with the existing table.
+
+```xml
+
+<hibernate-configuration>
+
+	<session-factory>
+   <!--for  transaction : auto commit need t obe false  --> 
+		<property name="hibernate.connection.autocommit">false</property> 
+      <!--sb config  -->
+		<property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+		<property name="hibernate.connection.password">password</property>
+		<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/day2?useSSL=false</property>
+		<property name="hibernate.connection.username">dac</property>
+		<property name="hibernate.current_session_context_class">thread</property>
+		<property name="hibernate.connection.pool_size">2</property>
+		<!-- <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property> -->
+    <!-- for debugginh -->
+		<property name="hibernate.show_sql">true</property>
+		<property name="hibernate.format_sql">true</property>
+    <!--hbm2ddl : hibernate mapping to data definition language : continue with same table once mapped -->
+		<property name="hibernate.hbm2ddl.auto">update</property>
+    <!--map pojo to table  -->
+		<mapping class="pojos.Supplier"/>
+
+	</session-factory>
+</hibernate-configuration>
+```
+
+
 ## notes 
 
-
-### Introduction to Hibernate Caching
-
-While working with Hibernate web applications we will face so many problems in its performance due to database traffic. That too when the database traffic is very heavy . Actually hibernate is well used just because of its high performance only. So some techniques are necessary to maintain its performance. 
-
-Caching is the best technique to solve this problem. 
-
-The performance of Hibernate web applications is improved using caching by optimizing the database applications. 
-
-The cache actually stores the data already loaded from the database, so that the traffic between our application and the database will be reduced when the application want to access that data again. 
-At maximum the application will work with the data in the cache only. Whenever some another data is needed, the database will be accessed. Because the time needed to access the database is more when compared with the time needed to access the cache. So obviously the access time and traffic will be reduced between the application and the database. 
-Here the cache stores only the data related to current running application. In order to do that, the cache must be cleared time to time whenever the applications are changing.
-
-
-### Difference in get & load
-1. Both use common API (i.e load or get(Class c,Serializable id))
-Ret type = T
-In get --- if id doesn't exist --- rets null
-In load --- if id doesn't exist & u are accessing it from within hib session --- throws ObjectNotFoundExc
-2. In get --- Hibernate uses eager fetching policy ---- meaning will generate select query always & load the state from DB in persistent POJO ref. --- so even if u access the same from within the session(persistent pojo)  or outside (detached) the hib session --- NO EXCEPTION(proxy + state)
-
-3. In load --- Hib uses lazy fetching policy ---- meaning it will , by default NOT generate any select query --- so what u have is ONLY PROXY(wrapper ---with no state loaded from DB) --- on such a proxy --- if u access anything outside the hib session(detached) ---- 
-U WILL GET ---LazyInitializationExc 
-Fix --- 1. Change fetch type --- to eager (NOT AT ALL reco.=> no caching , disabling L1 cache) 
-2. If u want to access any POJO in detached manner(i.e outside hib session scope) -
-fire non-id get method from within session & then hib has to load entire state from DB ---NO LazyInitializationExc 
-
-
-
-### Session API update Vs merge
-Both methods transition detached object to persistent state.
-
- Update():- if you are sure that the session does not contain an already persistent instance with the same identifier then use update to save the data in hibernate.  If session has such object with same id , then it throws ---  org.hibernate.NonUniqueObjectException: a different object with the same identifier value was already associated with the session:
-
-
-Merge():-if you want to save your modificatiions at any time with out knowing about the state of an session then use merge() in hibernate.
-
- 
-
-
-
-
-
-### Lazy fetching (becomes important in relationships or in Load Vs get)
-When a client requests an entity(eg - Course POJO) and its associated graph of objects(eg -Student POJO)  from the database, it isnt usually necessary to retrieve the whole graph of every (indirectly) associated
-object. You wouldnt want to load the whole database into memory at once;
-eg: loading a single Category shouldnt trigger the loading of all Items in that category(one-->many)
-----------------------------------------------------------
 
  ### What is Session?
 - Represents a wrapper around pooled out jdbc connection.
@@ -2000,6 +2028,7 @@ files (or resources) are loaded in the memory.
 - Replace it by 3rd party vendor supplied connection pools
    - eg Apache or C3P0 or hikari in spring boot-- for production grade applications.
    - 
+
 ### Natural Key Vs Surrogate Key
 
 If u have User reg system -- then u have a business rule that --- user email must be distinct. So if u want to make this as a prim key --then user will have to supply this during regsitration. 
@@ -2008,18 +2037,668 @@ This is called as natural key. Since its value will be user supplied , u cant te
 Where  as -- if u say I will reserve user id only for mapping purposes(similar to serial no ), it need not come from user at all & can definitely use hib. to auto generate it for u---this is ur surrogate key & can then use @GeneratedValue.
 
 
+## todays 
 
-### hibernate session api 
+### Persistent Object Life cycle
+
+!['day8_pers'](day8.6_POJO%20States.png)
+
+1. Transient State
+- An object is said to be in transient state if it is not associated with the session,and has no matching record  in the database table.
+- For example an Object of pojo class Account shown 
+```java
+Account account=new Account();
+account.setAccno(101);
+```
+
+2. Persistent State
+- An object is said to be in persistent state if 
+  - it is associated with session object (L1 cache) and
+  -  will result into a matching record in the databse table.(i.e upon commit)
+
+> session.save(account);tx.commit();
+- or
+> Account account=session.get(Account.class,102);
+- OR via HQL/JPQL
+
+
+- 1.  Note
+- When the POJO is in persistent state it
+ - it will be in synchronization with the matching record in DB 
+ - i.e  if we make any changes to the state of   persistent POJO it will be reflected in the database.(after commiting tx) 
+ - i.e automatic dirty checking will be performed(resulting in insert/update/delete)
+
+
+3. Detached state
+
+- Object is not associated with session but has matching record in the database table.
+-  If we make any changes to the state ofdetached object it will NOT  be reflected in the database.
+
+- after these commands Object becomes Detached
+```java
+session.clear();
+session.evict(Object);
+session.close();
+```
+- 1. Note :
+- By calling update method on session object it will go from detached state to persistent state.
+- By calling delete method on session object it will go from persistenet state to transient  state.
+ 
+
+4. Explain the following methods of Session API
+- 1. > public void persist(Object ref) -
+- Persists specified transient POJO on underlying DB , upon comitting the transaction.
+- 2. > void clear() 
+- When clear() is called on session object all  the objects associated with the session object become detached.
+- But Databse Connection is not closed.
+- (Completely clears the session. Evicts all loaded instances and cancel all pending saves, updates and deletions)
+
+- 3. void close()
+ 
+-  When close() is called on session object all the objects associated with the session object become detached and also closes the  Database Connection.
+
+- 4. public void evict(Object ref)
+
+- It detaches a particular persistent object detached or disassociates from the session.
+- (Remove this instance from the session cache. Changes to the instance will not be synchronized with the database. )
+
+- 5. void flush()
+
+- When the object is in persistent state ,whatever changes we made to the object state will be reflected in the databse onlyat the end of transaction.
+
+- If we want to reflect the changes before the end of transaction 
+     - (i.e before commiting the transaction ) 
+     -  call the flush method.
+- (Flushing is the process of synchronizing the underlying DB state with persistable state of session cache )
+
+ - 5. boolean contains(Object ref)
+- The method indicates whether the object is associated with session or not.
+
+- 6. void refresh(Object ref) -
+-  ref --persistent or detached
+- This method is used to get the latest  data from database and make  corresponding modifications to the persistent object state.
+- (Re-read the state of the given instance from the underlying database)
+
+- 6. public void update(Object ref)
+
+- If object is in persistent state no need of calling the update method .
+- As the object is in sync with the database whatever changes made to the object 
+will be reflect to database at the end of transaction.
+- eg ---
+```java
+ updateAccount(Account a,double amt)
+{
+    sess, tx
+    sop(a);set amt
+    sess.update(a);
+    sop(a);
+}
+```
+
+
+- 7. When the object is in detached state recordis present in the table
+- but object is not in sync with database,
+- therefore update() method can be called to update the record in the table
+
+- 8. Which exceptions update method can raise?
+1. StaleStateException -
+- If u are trying to update a record (using session.update(ref)), whose id doesn't exist.
+- i.e update can't transition from transient --->persistent
+- It can only transition from detached --->persistent.
+- eg -
+- update_book.jsp -- supply updated details + id which doesn't exists on db.
+
+
+2. NonUniqueObjectException -
+- If there is already persistence instance with same id in session.
+- eg -
+- UpdateContactAddress.java
+
+
+- 9. public Object merge(Object ref)
+- Can Transition from transient -->persistent & detached --->persistent.
+- Regarding Hibernate merge
+1. The state of a transient or detached instance may also be made persistent as a new persistent instance by calling merge().
+2. API of Session
+ - Object merge(Object object)
+ - Copies the state of the given object(can be passed as transient or detached) onto the persistent object with the same identifier. 
+3. If there is no persistent instance currently associated with the session, it will be loaded. 
+4. Return the persistent instance. If the given instance is unsaved, save a copy of and return it as a newly persistent instance. The given instance does not become associated with the session.
+5. will not throw NonUniqueObjectException --Even If there is already persistence instance with same id in session.
+
+
+
+
+- 10. public void saveOrUpdate(Object ref)
+ - The method persists the object (insert) if matching record is not found (& id inited to default value) or fires update query
+- If u supply Object , with non-existing ID -- Fires StaleStateException.
+
+- lock()
+ - when lock() method is called on the session object for a persistent object ,
+ - untill the transaction is commited in the hibernate application , externally the matching record in the table cannot be modified.
+ > session.lock(object,LockMode);
+
+eg 
+-  session.lock(account,LockMode.UPGRADE);  
+
+
+
+
+# day 9
+
+## revision 
+
+1. Any problem noticed for change password in case of invalid credentials ?
+Cause n solution
+- dueto Hibernate Exception, i.e unchecked exception  
+- so replace it with Runtime Exception 
+
+
+2. POJO state transitions 
+- Part of L1 cache (i.e POJO ref added in L1 cache)    ,
+-  is it part of DB (is there a corresponding row in DB)
+1. transient : NO(L1) NO(DB) (exists only in java Heap)
+
+2. persistent : YES(L1), (DB) Depends upon : 
+ - 1. transient ---> persistent 
+    - (save/persist/saveOrUpdate/merge) : NOt part of DB but, will become upon commit
+ - 2. get/load/JPQL/HQL :
+    - they return  PERSISTENT pojo/s  as (select) query
+    - for these YES(L1) YES(DB)
+
+3. detached  : NO(L1) YES(DB)
+- 1. When will persistent POJO/s become detached in case we obtain session object from folowing methods  ?  
++ 1.  for openSession() :
+   -  session.close() via either try-with-resources or finally block
++ 2.  getCurrentSession() :
+      -  upon Tx boundary(commit/rollback) 
++   Any Other Triggers for persistent----->Detached  : 
+- Yes,  Session  APIs : 
++ 3. evict()
+  - for single pojo instance  
++ 4. clear()
+  - for all pojos associated with sesion
+  - equivalent to  a evictAll method 
+- become detached  
+
+!['lifeCycle'](day8.1_pojo-life-cycle-image.png)
+---
+
+3. Important statements
+- 1. If you modify the state(via setters)  of PERSISTENT entity/pojo :
+   -  Hibernate performs auto dirty checking @ commit (resulting in insert/update/delete) 
+   -  i.e it will auto sync up the state of DB with that of L1 cache.
+
+- 2. If you modify the state(via setters of pojo )  of DETACHED entity/pojo :
+   -  Hibernate DOES NOT perform auto dirty checking @ commit (resulting in insert/update/delete) 
+   -  i.e it will NOT auto sync up the state of DB with that of L1 cache.
+
+- 3. org.hibernate.Session API (Hibernate specific) : 
+   - will have to be changed if hibernate is replaced by some other JPA implementor. 
+   - DAO layer : hibernate specific BUT 
+   - POJO : JPA  specific
+   - Will be replaced by : JPA (javax.persistence) API : eg : EntityManager  
+
+4. Recap of Session API
+- 
+1. public Serializable save (Object transientRef) throws HibernateException
+2. <T> T get(Class<T> pojoCls,Serializable id) throws HibernateException
+- 1. In case of invalid id  => null
+- 2. In case of valid id  => returns to persistent POJO
+- Use case : searching by PK
+
+3. Query<T>  createQuery(String jpql,Class<T> cls) : 
+- Use case : for search by non PK
+
+- Solve   List all vendors , registered after specific reg date & reg amount < specified amt.
+eg :
+```java
+ jpql ="select v from Vendor v where v.regDate > :dt and v.regAmount < :amount and v.userRole = :role";
+List<Vendor> vendorList=session.createQuery(jpql,Vendor.class).setParameter("dt",date1)...getResultList();
+-  IN Parameter --->  :variable 
+```
+
+- 1. **org.hibernate.query.Query Methods**
+1. getResultList : rets list of persistent entities
+2. getSingleResult : 
+ - result single result object
+ - in case of no result => 
+    - throws Exc(javax.persistence.NoResultException)
+    - so  catch  it in : RuntimeException
+    - as it is not a Hibernate Exception 
+- other.wise : connection leak will be detected.
+- in case  of multiple results here in getsingleResult()  : givesa NonUniqueResultException
+---
++  Question
+```java
+ Apply discount to reg amount , for all users , reged before a specific date.
+i/p -- discount amt, reg date
+
+jpql ="select u from User u where u.regDate < :dt";
+getResultList() ; //1 select query
+list.forEach(u -> u.setRegAmount(u.getRegAmount-discount));
+tx.commit(); // if list size =10 : how many update queries will be fired  
+ OR
+Is it possible to replace it by single update query ? 
+YES : BulkUpdate
+
+```
+
+
+5.  Session API
+- 1. > public Query<T> createQuery(String jpql) throws HibernateException
+- for jpql -- DML
+
+- 2.  Query API
+- public int executeUpdate() throws HibernateException
+--use case --DML
+
+1. H.W
+Objective --delete vendor details for those vendors reg date > dt.
+via Bulk delete
+String jpql="delete Vendor v where v.regDate > :dt and v.userRole=:rl";
+
+4. BLOB Handling
+Save an image(any bin content) to  DB
+
+NOTE :
+MySQL supports 4 types of BLOB data types, which only differ in the maximum length of data they can store. 
+TINYBLOB: Only supports up to 255 bytes.
+BLOB: Can handle up to 65,535 bytes of data.
+MEDIUMBLOB: The maximum length supported is 16,777,215 bytes.
+LONGBLOB: Stores up to 4,294,967,295 bytes of data.
+
+
+User i/p : image i/p file name along with path, user id
+Steps :
+1.  validate file (using java.io.File class API)
+2. get byte[] from file
+Use FileUtils class API
+public static byte[] readFileToByteArray(File file) throws IOException
+3. session.get 
+get -- null chk : not null : persistent pojo ref : setImage --commit (update) 
+
+
+5. restore image  from DB
+User i/p : userId , o/p file name to save bin contents
+API of FileUtils  class
+public static void writeByteArrayToFile(File file,byte[] data) throws IOException
+
+Steps
+Session
+get : null chk : not null : persistent : getImage --- byte[]
+byte[] ---> write to the o/p file
+
+---------------------
+Advanced Hibernate
+Relationship between entities (ER)
+Types of associations
+one-to-one
+one-to-many
+many-to-one
+many-to-many
+
+
+## Today 
+
+Objective --Using  one-to-many & many-to-one assocition between entities
+eg : Course 1 <---->* Student
+ 2 types of associations : uni directional n bi -directional (Object world concept n NOT DB concept)
+Course 1 ---->* Student (uni directional) (navigation possible from Course---> Student)
+eg : Course POJO
+courseId,.......+ List<Student> students
+
+Student POJO 
+sid, name..... no course info
+
+eg : Course 1 <---* Student (uni)
+Course : .... no student info
+Student : ...... + Course c;
+
+eg :  Course 1<---->* Student (bi dir association)
+Course : ..... +List<Student> students
+Student : .... +Course c;
+
+Tables : courses , stduents(....+ course_id : FK : references PK of courses table)
+
+parent table : courses
+child table  : students
+
+owning side table : students (the table which actually contains physical association : FK ) : many side
+non-owning (inverse side) table : courses.
+
+one side -- Course
+many side --student
+parent side --course
+child side --student
+2 types of asso --uni -directional.
+In  bi-dir association ,
+owning side --FK col appearing side --Student
+non-owning(inverse side) -- course
+Course --- id,name(unique),capacity,strt_date,end_date,fees
++
+List<Student> students;
+
+
+
+Student --id ,name,email +
+private Course selectedCourse;
+
+
+1. If u don't add any mapping annotations, hibernate throws MappingException
+Solution --add suitable annotaions
+
+@OneToMany
+@ManyToOne
+@OneToOne
+@ManyToMany
+
+
+2. Problems observed
+2.1 FK column name --as per hibernate's naming convention
+2.2 Additional table is created
+Why ?
+In case of bi-dir association : 
+Hibernate is unable to figure out --which is the owning side of the association.
+
+Solution
+2.1 @JoinColumn -- owning side
+eg : In Student POJO 
+@ManyToOne
+@JoinColumn(name="c_id")
+public Course getSelectedCourse() {...}
+		
+2.2 mappedBy attribute of one-to-many annotation.
+What is mappedBy & when it's mandatory?
+Mandatory only in case of bi-dir associations
+It's attribute of the @OneToMany / @ManyToMany / @OneToOne annotation.
+What will happen if you don't add this attribute ?
+In case of one-to-many : Additional table (un necessary for the asso. mapping) gets created
+It MUST appear in the inverse side of the association.
+value of mappedBy=name of the association property as it appears in the owning side.
+eg : In Course POJO 
+@OneToMany(mappedBy="selectedCourse")
+public List<Student> getStudents() {..}
+
+
+3. DAO 
+ICourseDao
+String launchCourse(Course c);
+
+
+Problem Observed
+When u tried to save Course object, with multiple students, insert query was fired only on courses table. 
+Reason -- def cascade type = none
+Solution --Add suitable cascade type & observe.
+eg : @OneToMany(mappedBy="selectedCourse",
+cascade=CascadeType.ALL)
+public List<Student> getStudents(){...}
+
+
+Suggestion from Gavin King , regarding bi-dir association
+Add helper methods (convenience methods) in POJOs, to set up bi-dir asso.
+How ?
+
+Objective
+Admit student
+I/p -- student name, email, course name
+o/p -- student details inserted + linked with FK
+
+DAO --IStudentDao
+String admitNewStudent(String courseName,Student s);
+
+--------------------------------
+
+Problem associated with one to many 
+org.hibernate.LazyInitializationException
+Trigger : GetCourseDetails : while accessing the Student details
+
+Hibernate follows def fetching policies for different types of asso.
+one-to-one : EAGER
+one-to-many : LAZY
+many-to-one : EAGER
+many-to-many : LAZY
+
+
+one-to-many : LAZY
+Meaning : If you try to fetch details of one side(eg : Course) , will it fetch auto details of many side ?
+NO (i.e select query will be fired only on courses table)
+Why ? : for performance 
+
+When will hibernate throw LazyInitializationException ?
+Any time you are trying to access un-fetched data from DB , in a detached manner(outside the session scope)
+cases : one-to-many
+many-many
+session's load
+
+un fetched data : in Course obj : represented by : proxy (substitution) : collection of proxies
+proxy => un fetched data from DB
+
+Solutions
+1. Change the fetching policy of hibernate for one-to-many to : EAGER
+eg : 
+@OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL,fetch=FetchType.EAGER)  
+	private List<Student> students=new ArrayList<>();
+
+Is it recommneded soln : NO (since even if you just want to access one side details , hib will fire query on many side) --will lead to worst performance. 
+
+2. 
+@OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL)  
+	private List<Student> students=new ArrayList<>();
+Solution : Access the size of the collection within session scope : soln will be applied in DAO layer
+
+Dis Adv : Hibernate fires multiple queries to get the complete details
+
+3. How to fetch the complete details , in a single join query ?
+Using "join fetch" keyword in JPQL
+String jpql = "select c from Course c join fetch c.students where c.title=:ti";
+
+
+
+
+### 1. Hibernate Session 
+
+1. A Hibernate Session  is a set of managed entity instances that exist in a particular data store. 
+
+2. Managing an Entity Instances Life Cycle
+
+You manage entity instances(or POJOs) by invoking operations on the entity/POJO  using EntityManager/Session instance. 
+
+Entity instances are in one of four states  (2 imp aspects of it : its asso. with the hibernate session & sync of its state with the underlying DB)
+
+States : new or transient , managed or persistent, detached, removed.
+
+New entity instances have no persistent identity and are not yet associated with a hib. session (transient)
+
+Managed entity instances have a persistent identity and are associated with a hib. session.(persistent : via save() or saveOrUpdate()) Changes to DB will be done when tx is commited.
+
+Detached entity instances have a persistent identity and are not currently associated with a persistence context/Hib session.
+
+Removed entity instances have a persistent identity, are associated with a persistent context and are scheduled for removal from the data store.(removed via  session.delete(obj))
+
+
+### 2. Hibernate API
+
+0. SessionFactory API
+- getCurrentSession vs openSession
+> public Session openSession() throws HibernateExc
+  - opens new session from SF,which has to be explicitely closed by prog.
+
+> public Session getCurrentSession() throws HibernateExc
+ - Opens new session , if one doesn't exist ,
+ -  otherwise continues with the exisitng one.
+- Gets automatically closed upon Tx boundary or thread over
+- (since current session is bound to current thread --mentioned in hibernate.cfg.xml property   -
+     -  current_session_context_class ---thread)
+
+
+#### Testing core api
+1.  persist 
+- public void persist(Object transientRef)
+ - if u give some non-null id (existing or non-existing in DB) while calling persist(ref) -
+ - gives exception 
+ >  org.hibernate.PersistentObjectException:
+   -  detached entity passed to persist: 
+- why its taken as detached  ? --
+- as non null id.
+
+2. save 
+> public Serializable save(Object ref)
+- save, if user gives some non-null id(existing or non-existing in DB) while calling save(ref) 
+- doesn't give any exc, 
+- it Ignores your passed id &
+   -  creates its own id as per strategy chosen in @GeneratedValue &
+   -   inserts a row.
+
+3. saveOrUpdate
+> public void saveOrUpdate(Object ref)
+- either inserts/updates or throws exc.
+- 1. null id -->  fires insert (works as save)
+- 2. non-null BUT existing id -->  fires update (works as update)
+- 3. non-null BUT non existing id -- > throws StaleObjectStateException -
+       - to indicate that  we are trying to delete or update a row that does not exist.
+ - 4. merge
+> public Object merge(Object ref)
+- I/P -- either transient or detached POJO ref.
+- O/P --Rets PERSISTENT POJO ref.
+
+- 1. null id -- fires insert (works as save)
+- 2. non-null BUT existing id -- fires update (select , update)
+- 3. non-null BUT non existing id -- no exception thrown -
+     -  Ignores your passed id & creates its own id & inserts a row.(select,insert)
+
+
+4.  Difference in get & load
+1. Both use common API (i.e load or get(Class c,Serializable id))
+ - Ret type = T
+- In get --- if id doesn't exist --- rets null
+- In load --- if id doesn't exist & u are accessing it from within hib session --- throws ObjectNotFoundExc
+2. In get --
+- Hibernate uses eager fetching policy ---
+- meaning will generate select query always & load the state from DB in persistent POJO ref. --- 
+- so even if u access the same from within the session(persistent pojo)  or outside (detached) the hib session --
+-  NO EXCEPTION(proxy + state)
+
+3. In load --
+- Hib uses lazy fetching policy ---
+- meaning it will , by default NOT generate any select query --
+   -  so what u have is ONLY PROXY(wrapper ---> with no state loaded from DB) --- on such a proxy 
+-  if u access anything outside the hib session(detached) ---- 
+- U WILL GET ---LazyInitializationExc 
+- Fix -
+1. Change fetch type --- to eager (NOT AT ALL reco.=> no caching , disabling L1 cache) 
+2. If u want to access any POJO in detached manner(i.e outside hib session scope) -
+fire non-id get method from within session & then hib has to load entire state from DB ---NO LazyInitializationExc 
+
+5. update (Session API)
+> public void update(Object object)
+- Update the persistent instance with the identifier of the given detached instance.
+- I/P --detached POJO containing updated state.
+- Same POJO becomes persistent.
+ 
+- 1. Exception associated : 
+1. org.hibernate.TransientObjectException: 
+- The given object has a null identifier:
+- i.e while calling update if u give null id. (transient ----X ---persistent via update)
+
+2. org.hibernate.StaleStateException -
+- to indicate that  we are trying to delete or update a row that does not exist.
+3. org.hibernate.NonUniqueObjectException:
+=  a different object with the same identifier value was already associated with the session
+
+
+6. merge 
+> public Object merge(Object ref)
+- Can Transition from transient -->persistent & detached --->persistent.
+- Regarding Hibernate merge
++ 1. The state of a transient or detached instance may also be made persistent as a new persistent instance by calling merge().
++ 2. API of Session
+> Object merge(Object object)
++ 3. Copies the state of the given object(can be passed as transient or detached) onto the persistent object with the same identifier. 
+ + 4. If there is no persistent instance currently associated with the session, it will be loaded. 
+ + 5. Return the persistent instance. 
+  - If the given instance is unsaved, save a copy of and return it as a newly persistent instance. 
+  - The given instance does not become associated with the session.
+5. will not throw NonUniqueObjectException -
+- Even If there is already persistence instance with same id in session.
+
+
+7. evict 
+> public void evict(Object persistentPojoRef)
+- It detaches a particular persistent object from the session level cache(L1 cache)
+- (Remove this instance from the session cache. Changes to the instance will not be synchronized with the database. )
+
+8. clear 
+> void clear() 
+- When clear() is called on session object all  the objects associated with the session object(L1 cache) become detached.
+-  But Databse Connection is not returned to connection pool.
+- (Completely clears the session. Evicts all loaded instances and cancel all pending saves, updates and deletions)
+
+9. close
+>  void close()
+- When close() is called on session object 
+    - all  the persistent objects associated with the session object become detached(l1 cache is cleared) and also closes the  Database Connection.
+
+
+10. flush 
+> void flush()
+- When the object is in persistent state , whatever changes we made to the object 
+state will be reflected in the databse only at the end of transaction.
+- BUT If we want to reflect the changes before the end of transaction 
+- i.e before commiting the transaction,  call the flush method.
+- (Flushing is the process of synchronizing the underlying DB state with persistable state of session cache )
+
+11. contains
+> boolean contains(Object ref)
+- The method indicates whether the object is associated with session or not.(
+   - i.e is it a part of l1 cache ?
+
+12. refresh 
+> void refresh(Object ref) -
+- ref --persistent or detached
+- This method is used to get the latest  data from database and make corresponding modifications to the persistent object state.
+- (Re-reads the state of the given instance from the underlying database
 
 
 
 
 
 
+### Introduction to Hibernate Caching
+
+1. While working with Hibernate web applications we will face so many problems in its performance due to database traffic. 
+- That too when the database traffic is very heavy .
+-  Actually hibernate is well used just because of its high performance only. 
+-  So some techniques are necessary to maintain its performance. 
+
+2. Caching is the best technique to solve this problem. 
+- The performance of Hibernate web applications is improved using caching by optimizing the database applications. 
+- The cache actually stores the data already loaded from the database, so that the traffic between our application and the database will be reduced when the application want to access that data again. 
+- At maximum the application will work with the data in the cache only.
+-  Whenever some another data is needed, the database will be accessed.
+-   Because the time needed to access the database is more when compared with the time needed to access the cache.
+-    So obviously the access time and traffic will be reduced between the application and the database. 
+- Here the cache stores only the data related to current running application. In order to do that, the cache must be cleared time to time whenever the applications are changing.
 
 
 
 
+
+### Session API update Vs merge
+Both methods transition detached object to persistent state.
+
+ Update():- if you are sure that the session does not contain an already persistent instance with the same identifier then use update to save the data in hibernate.  If session has such object with same id , then it throws ---  org.hibernate.NonUniqueObjectException: a different object with the same identifier value was already associated with the session:
+
+
+Merge():-if you want to save your modificatiions at any time with out knowing about the state of an session then use merge() in hibernate.
+
+ 
+
+### Lazy fetching (becomes important in relationships or in Load Vs get)
+- When a client requests an entity(eg - Course POJO) and its associated graph of objects(eg -Student POJO)  from the database, it isnt usually necessary to retrieve the whole graph of every (indirectly) associated
+object. You wouldnt want to load the whole database into memory at once;
+eg: loading a single Category shouldnt trigger the loading of all Items in that category(one-->many)
+----------------------------------------------------------
 
 
 
