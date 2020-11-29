@@ -2275,3 +2275,295 @@ public class Student {
 	@CollectionTable(name = "edu_qualifications",joinColumns = @JoinColumn(name = "s_id"))
 	private List<EducationalQualifications> qualifications= new ArrayList<>(); 	
 ```
+
+#### 4. Case Study - wen app using hibernate 
+
+1. web listener for ini and destroy -- resources
+ - session factory 
+
+```java
+package listerners;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+
+import utils.HibernateUtils;
+
+@WebListener
+public class SessionFactoryManager implements ServletContextListener {
+public void contextDestroye(ServletContextEvent sce) { 
+        System.out.println("context destroyed");
+        HibernateUtils.getSf().close();
+	}
+	
+public void contextInitialized(ServletContextEvent sce)  { 
+         
+    	System.out.println("contenxt inited");
+    	
+    	HibernateUtils.getSf();
+    }
+	
+}
+
+```
+
+2. pojo class
+- 1. vendor class
+```java
+
+@Entity
+@Table(name = "vendors_tbl")
+public class Vendor {
+	@Id //PK 
+	@GeneratedValue(strategy = GenerationType.IDENTITY) //strategy = AUTO will be replaced : auto_increment
+	@Column(name = "vendor_id")
+	private Integer vendorId;
+	@Column(length = 30)
+	private String name;
+	@Column(length = 30,unique = true)
+	private String email;
+	@Column(length = 30)
+	private String password;
+	@Column(name="reg_amount")
+	private double regAmount;
+	@Column(name = "reg_date")
+	private LocalDate regDate;//col type=date
+	@Enumerated(EnumType.STRING)
+	@Column(name="user_role",length = 20)
+	private Role userRole;
+	
+	// one to many : bi directional asso between entities : here parent , one sode , inverse side
+	
+	@OneToMany(mappedBy = "accountOwner",cascade = CascadeType.ALL,orphanRemoval = true)
+	private List<BankAccount> bankAccounts = new ArrayList<BankAccount>(); 
+	
+	//def ctor : mandatory
+	public Vendor() {
+		System.out.println("in vendor ctor");
+	}
+	//add parametrized constr
+	//add all getters n setters
+	// add helper method 
+	public void addAccount(BankAccount b)
+	{bankAccounts.add(b);
+	b.setAccountOwner(this);
+	}
+	public void removeAccount(BankAccount b)
+	{	bankAccounts.remove(b);
+		b.setAccountOwner(null);
+	}
+}
+
+```
+- 2. Bank Account pojo 
+```java
+import javax.persistence.*;
+
+@Entity
+@Table(name = "accts_tbl")
+public class BankAccount {
+
+	@Id // PK 
+	@GeneratedValue(strategy = GenerationType.IDENTITY) 
+   @Column(name = "acct_id")
+	private Integer acctNo; 
+	
+	@Enumerated(EnumType.STRING)
+	@Column(name = "ac_type", length = 20)
+	private AcType acType; 
+	
+	private double balance; 
+	
+	@Column(name = "creation_date")
+	private LocalDate creationDate; 
+	
+	// many to one association between two entities : owning side 
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "vendor_id",nullable = false)
+	private Vendor accountOwner; 
+	
+	public BankAccount() {
+	System.out.println("in  contsr of" + getClass().getName());
+		// TODO Auto-generated constructor stub
+	}	
+}
+
+
+```
+
+3. bean class
+
+- 1. vendor bean
+```java
+package beans;
+import dao.VendorDaoImpl;
+import pojos.Role;
+import pojos.Vendor;
+
+public class VendorBean {
+	private String email; 
+	private String password;
+	// manage dao 
+	private VendorDaoImpl vendorDao;
+	// add a property to stored validated user details 
+	private Vendor validatedDetails; 
+	// add a property to incdicate status 
+	private String message;
+	// default constructor 
+	public VendorBean() {	
+	vendorDao = new VendorDaoImpl(); 
+	}
+	// setter and getter
+
+	// Add B.L method  :to authenticate user and return dynamic navigational outcome 
+	
+	public String validateUser() {
+		
+System.out.println("in validate user " + email + password);
+	
+// invode dao method : check for runtime exception 
+try {
+validatedDetails =  vendorDao.authenticateUser(email, password);
+// valid Login : check role 
+message = "Login successful";
+if(validatedDetails.getUserRole().equals(Role.ADMIN))
+return "admin" ; 
+			
+return "vendor_details"; 
+} catch (RuntimeException e) {
+System.out.println("error in bean " + e);
+// => implies invalid login 
+message = "Invalid Login,Please retry ... ";
+return "login"; 
+		}
+	}	
+}
+
+```
+
+- 2. bank account bean
+
+```java
+package beans;
+import java.util.List;
+import dao.BankAccountImpl;
+import pojos.BankAccount;
+
+public class BankAccountBean {
+// dao // add a property to represent vendor Id
+private int vendorId;
+private BankAccountImpl acctDao;
+public void setVendorId(int vendorId) {
+this.vendorId = vendorId;}
+
+public BankAccountBean() {
+// create dao instance
+acctDao = new BankAccountImpl();}
+// add B.L method to fetch acct for logged in vendor  
+// method in dao layer
+public List<BankAccount> fetchAccounts(){
+		// invode account dao method 
+return acctDao.getAllAccountsByVendorId(vendorId); 
+	}
+}
+```
+
+4. JSP
+- 1. login.jsp
+```java
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<%-- create JB instance and add it under sssion scope --%>
+<%-- session.addAttribute("vendor_bean", new VendorBean()) --%>
+<jsp:useBean id="vendor_bean" class="beans.VendorBean" scope = "session" />
+
+<jsp:useBean id="acct_bean" class="beans.BankAccountBean" scope="session"/>
+
+<body>
+<form action="validate.jsp" method="post">
+<table style="background-color: cyan; margin: auto;" border="1">
+<tr>
+	<td>Enter User Email</td>
+	<td><input type="text" name="email" /></td>
+	</tr>
+		<tr>
+		<td>Enter Password</td>
+<td><input type="password" name="password" /></td>
+	</tr>
+<tr>
+<td><input type="submit" value="Login" /></td>
+	</tr>
+	</table>
+</form>
+</body>
+</html>
+
+            
+```
+
+- 2. validate.jsp
+```java
+
+   <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %> 
+
+<%--transfer conversational state of client to java Bean : setter  --%>
+<jsp:setProperty property="*" name="vendor_bean"/>
+
+<%-- redirect client to next page in the Next request --%>
+<%--  response.sendRedirect(response.encodeRedirectURL( session.getAttribute("vendor_bean").valudateUser().concat(".jsp"))) --%>
+
+<c:redirect url="${sessionScope.vendor_bean.validateUser()}.jsp"/>
+
+
+```
+
+- 2. vendor_details.jsp
+```java
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+
+<%-- acct_bean.setVenorId(session.getAttribute("vendor_bean").getValidatedDetails().setVendorId()) --%>
+<jsp:setProperty property="vendorId" value="${sessionScope.vendor_bean.validatedDetails.vendorId}" name="acct_bean"/>
+
+<body>
+
+<%-- display login successful message --%>
+
+<h5> ${sessionScope.vendor_bean.message} </h5>
+
+<h4>Vendor details :  ${sessionScope.vendor_bean.validatedDetails}  </h4>
+
+
+<h5  align="center"> A/C Summary  </h5>
+<%-- <h5> ${sessionScope.vendor_bean.validatedDetails.bankAccounts } </h5> --%>
+
+<h3>${sessionScope.acct_bean.fetchAccounts()} </h3>
+
+</body>
+</html>
+```
+
+- 2. admin.jsp
+```java
+<%-- display login successful message --%>
+
+<h5> ${sessionScope.vendor_bean.message} </h5>
+<h4>Admin details :  ${sessionScope.vendor_bean.validatedDetails}  </h4>
+</body>
+</html>
+```
+
+
