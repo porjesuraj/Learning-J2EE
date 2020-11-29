@@ -2186,7 +2186,7 @@ eg
 
 # day 9
 
-## revision 
+### revision 
 
 1. Any problem noticed for change password in case of invalid credentials ?
 Cause n solution
@@ -2222,7 +2222,7 @@ Cause n solution
 - become detached  
 
 !['lifeCycle'](day8.1_pojo-life-cycle-image.png)
----
+
 
 3. Important statements
 - 1. If you modify the state(via setters)  of PERSISTENT entity/pojo :
@@ -2293,57 +2293,61 @@ YES : BulkUpdate
 - public int executeUpdate() throws HibernateException
 --use case --DML
 
-1. H.W
-Objective --delete vendor details for those vendors reg date > dt.
-via Bulk delete
-String jpql="delete Vendor v where v.regDate > :dt and v.userRole=:rl";
-
-4. BLOB Handling
-Save an image(any bin content) to  DB
-
-NOTE :
-MySQL supports 4 types of BLOB data types, which only differ in the maximum length of data they can store. 
-TINYBLOB: Only supports up to 255 bytes.
-BLOB: Can handle up to 65,535 bytes of data.
-MEDIUMBLOB: The maximum length supported is 16,777,215 bytes.
-LONGBLOB: Stores up to 4,294,967,295 bytes of data.
 
 
-User i/p : image i/p file name along with path, user id
-Steps :
-1.  validate file (using java.io.File class API)
-2. get byte[] from file
-Use FileUtils class API
-public static byte[] readFileToByteArray(File file) throws IOException
-3. session.get 
-get -- null chk : not null : persistent pojo ref : setImage --commit (update) 
+6. BLOB Handling
+- Save an image(any bin content) to  DB
 
+- 1. NOTE :
+- MySQL supports 4 types of BLOB data types, which only differ in the maximum length of data they can store. 
+- 1. TINYBLOB: Only supports up to 255 bytes.
+- 2. BLOB: Can handle up to 65,535 bytes of data.
+- 3. MEDIUMBLOB: The maximum length supported is 16,777,215 bytes.
+- 4. LONGBLOB: Stores up to 4,294,967,295 bytes of data.
 
-5. restore image  from DB
-User i/p : userId , o/p file name to save bin contents
-API of FileUtils  class
-public static void writeByteArrayToFile(File file,byte[] data) throws IOException
+- 2. User i/p : 
+- image i/p file name along with path, user id
++ **Steps :**
+- 1.  validate file (using java.io.File class API)
+- 2. get byte[] from file
+- Use FileUtils class API
+> public static byte[] readFileToByteArray(File file throws IOException
+- 3. session.get 
+- get -- null chk : not null : persistent pojo ref : setImage --commit (update) 
 
-Steps
-Session
-get : null chk : not null : persistent : getImage --- byte[]
-byte[] ---> write to the o/p file
+- 4. restore image  from DB
+- User i/p : userId , o/p file name to save bin contents
+- API of FileUtils  class
+> public static void writeByteArrayToFile(File file,byte[] data) throws IOException
+
++ **Steps**
+- Session
+- get : null chk : not null : persistent : getImage --- byte[]
+- byte[] ---> write to the o/p file
 
 ---------------------
-Advanced Hibernate
-Relationship between entities (ER)
-Types of associations
-one-to-one
-one-to-many
-many-to-one
-many-to-many
 
 
-## Today 
 
-Objective --Using  one-to-many & many-to-one assocition between entities
-eg : Course 1 <---->* Student
- 2 types of associations : uni directional n bi -directional (Object world concept n NOT DB concept)
+### Today 
+
+1. Advanced Hibernate
+2. Relationship between entities (ER)
+3. Types of associations
+- 1. one-to-one
+- 2. one-to-many
+- 3. many-to-one
+- 4. many-to-many
+4.  Objective --
+ -Using  one-to-many & many-to-one assocition between entities
+- eg : Course 1 <---->* Student
+-  2 types of associations :
+- 1. uni directional n
+- 2.  bi -directional
+  -  (Object world concept n NOT DB concept)
+
+- 1.  case study
+```java
 Course 1 ---->* Student (uni directional) (navigation possible from Course---> Student)
 eg : Course POJO
 courseId,.......+ List<Student> students
@@ -2379,119 +2383,120 @@ Course --- id,name(unique),capacity,strt_date,end_date,fees
 +
 List<Student> students;
 
-
-
 Student --id ,name,email +
 private Course selectedCourse;
+``` 
 
-
-1. If u don't add any mapping annotations, hibernate throws MappingException
-Solution --add suitable annotaions
-
+- 2. If u don't add any mapping annotations, hibernate throws MappingException
+   - Solution --add suitable annotaions
+```java
 @OneToMany
 @ManyToOne
 @OneToOne
 @ManyToMany
+```
 
+- 3. Problems observed
+  1.  FK column name --as per hibernate's naming convention
+  2.   Additional table is created
+- 1.  Why ?
+   - In case of bi-dir association : 
+   - Hibernate is unable to figure out --which is the owning side of the association.
 
-2. Problems observed
-2.1 FK column name --as per hibernate's naming convention
-2.2 Additional table is created
-Why ?
-In case of bi-dir association : 
-Hibernate is unable to figure out --which is the owning side of the association.
-
-Solution
-2.1 @JoinColumn -- owning side
-eg : In Student POJO 
+-  2. Solution
+- 1.  @JoinColumn -- owning side
+- eg : In Student POJO 
+```java
 @ManyToOne
 @JoinColumn(name="c_id")
 public Course getSelectedCourse() {...}
-		
-2.2 mappedBy attribute of one-to-many annotation.
-What is mappedBy & when it's mandatory?
-Mandatory only in case of bi-dir associations
-It's attribute of the @OneToMany / @ManyToMany / @OneToOne annotation.
-What will happen if you don't add this attribute ?
-In case of one-to-many : Additional table (un necessary for the asso. mapping) gets created
-It MUST appear in the inverse side of the association.
-value of mappedBy=name of the association property as it appears in the owning side.
-eg : In Course POJO 
+```		
+-  mappedBy attribute of one-to-many annotation.
+- 2.  What is mappedBy & when it's mandatory?
+  - Mandatory only in case of bi-dir associations
+  - It's attribute of the @OneToMany / @ManyToMany / @OneToOne annotation.
+- 3. What will happen if you don't add this attribute ?
+- In case of one-to-many : Additional table (un necessary for the asso. mapping) gets created
+- It MUST appear in the inverse side of the association.
+- value of mappedBy=name of the association property as it appears in the owning side.
+- eg : In Course POJO 
+```java
 @OneToMany(mappedBy="selectedCourse")
 public List<Student> getStudents() {..}
+```
+
+- 4. DAO 
+- ICourseDao
+- String launchCourse(Course c);
 
 
-3. DAO 
-ICourseDao
-String launchCourse(Course c);
-
-
-Problem Observed
-When u tried to save Course object, with multiple students, insert query was fired only on courses table. 
-Reason -- def cascade type = none
-Solution --Add suitable cascade type & observe.
-eg : @OneToMany(mappedBy="selectedCourse",
+- 1. Problem Observed
+- When u tried to save Course object, with multiple students, insert query was fired only on courses table. 
+ - Reason -- def cascade type = none
+ - 2. Solution -
+ - Add suitable cascade type & observe.
+ - eg :
+ ```java
+  @OneToMany(mappedBy="selectedCourse",
 cascade=CascadeType.ALL)
 public List<Student> getStudents(){...}
+```
+- 3.  Suggestion from Gavin King , regarding bi-dir association
+- Add helper methods (convenience methods) in POJOs, to set up bi-dir asso.
+- 4 .How ?
+  - Objective
+  - Admit student
+   - I/p -- student name, email, course name
+   - o/p -- student details inserted + linked with FK
 
+- DAO --IStudentDao
+- String admitNewStudent(String courseName,Student s);
 
-Suggestion from Gavin King , regarding bi-dir association
-Add helper methods (convenience methods) in POJOs, to set up bi-dir asso.
-How ?
+---
 
-Objective
-Admit student
-I/p -- student name, email, course name
-o/p -- student details inserted + linked with FK
+ - 5. Problem associated with one to many 
+> org.hibernate.LazyInitializationException
+- Trigger : GetCourseDetails : while accessing the Student details
 
-DAO --IStudentDao
-String admitNewStudent(String courseName,Student s);
+- Hibernate follows def fetching policies for different types of asso.
+1. one-to-one : EAGER
+2. one-to-many : LAZY
+3. many-to-one : EAGER
+4. many-to-many : LAZY
 
---------------------------------
+- 1. one-to-many : LAZY
+- Meaning : If you try to fetch details of one side(eg : Course) , will it fetch auto details of many side ?
+   - NO (i.e select query will be fired only on courses table)
+    -Why ? : for performance 
 
-Problem associated with one to many 
-org.hibernate.LazyInitializationException
-Trigger : GetCourseDetails : while accessing the Student details
+- 2. When will hibernate throw LazyInitializationException ?
+   - Any time you are trying to access un-fetched data from DB , in a detached manner(outside the session scope)
+   - cases : one-to-many, many-many, session's load
 
-Hibernate follows def fetching policies for different types of asso.
-one-to-one : EAGER
-one-to-many : LAZY
-many-to-one : EAGER
-many-to-many : LAZY
-
-
-one-to-many : LAZY
-Meaning : If you try to fetch details of one side(eg : Course) , will it fetch auto details of many side ?
-NO (i.e select query will be fired only on courses table)
-Why ? : for performance 
-
-When will hibernate throw LazyInitializationException ?
-Any time you are trying to access un-fetched data from DB , in a detached manner(outside the session scope)
-cases : one-to-many
-many-many
-session's load
-
-un fetched data : in Course obj : represented by : proxy (substitution) : collection of proxies
+- un fetched data : in Course obj : represented by : proxy (substitution) : collection of proxies
 proxy => un fetched data from DB
 
-Solutions
+- 6. Solutions
 1. Change the fetching policy of hibernate for one-to-many to : EAGER
 eg : 
+```java
 @OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL,fetch=FetchType.EAGER)  
 	private List<Student> students=new ArrayList<>();
-
-Is it recommneded soln : NO (since even if you just want to access one side details , hib will fire query on many side) --will lead to worst performance. 
+```
+- Is it recommneded soln :
+-  NO (since even if you just want to access one side details , hib will fire query on many side) --will lead to worst performance. 
 
 2. 
+```java 
 @OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL)  
 	private List<Student> students=new ArrayList<>();
-Solution : Access the size of the collection within session scope : soln will be applied in DAO layer
-
-Dis Adv : Hibernate fires multiple queries to get the complete details
+```
+- Solution : Access the size of the collection within session scope : soln will be applied in DAO layer
+- Dis Adv : Hibernate fires multiple queries to get the complete details
 
 3. How to fetch the complete details , in a single join query ?
-Using "join fetch" keyword in JPQL
-String jpql = "select c from Course c join fetch c.students where c.title=:ti";
+ - Using "join fetch" keyword in JPQL
+ - String jpql = "select c from Course c join fetch c.students where c.title=:ti";
 
 
 
@@ -2604,7 +2609,7 @@ fire non-id get method from within session & then hib has to load entire state f
 2. org.hibernate.StaleStateException -
 - to indicate that  we are trying to delete or update a row that does not exist.
 3. org.hibernate.NonUniqueObjectException:
-=  a different object with the same identifier value was already associated with the session
+ - a different object with the same identifier value was already associated with the session
 
 
 6. merge 
@@ -2698,7 +2703,7 @@ Merge():-if you want to save your modificatiions at any time with out knowing ab
 - When a client requests an entity(eg - Course POJO) and its associated graph of objects(eg -Student POJO)  from the database, it isnt usually necessary to retrieve the whole graph of every (indirectly) associated
 object. You wouldnt want to load the whole database into memory at once;
 eg: loading a single Category shouldnt trigger the loading of all Items in that category(one-->many)
-----------------------------------------------------------
+---
 
 
 
@@ -2708,3 +2713,380 @@ eg: loading a single Category shouldnt trigger the loading of all Items in that 
 
 
 
+
+
+
+# day 10
+
+
+## Revise 
+1. Entity to Entity Associations 
+2. Which are different types of Association ?
+- 1. one-to-one
+- 2. one-to-many
+- 3. many-to-one
+- 4. many-many
+
+3. Case study for lab 
+```java
+eg : one to many bi-dir association
+Vendor 1 <-----> * BankAccount
+Regarding POJOs :
+Vendor POJO --- 
+Data members : vendorId ,name ,email ....+
+@OneToMany(mappedBy="acctOwner",cascade=CascadeType.ALL)
+private List<BankAccount> bankAccounts=new AL<>();
+ 
+
+BankAccount POJO---acctNo(PK), acType(enum), balance +
+@ManyToOne
+private Vendor acctOwner;
+
+Vendor : one , parent , inverse
+BankAccount : many , child , owning
+
+```
+4.  What will happen if no mapping annotations are specified ?
+- Hibernate throws
+>  org.hibernate.MappingException
+
+
+5.  What will happen if mappedBy is not specified ?
+- 1.  Hibernate  creates additional 3rd table for mapping.
+- 2. Why : Hibernate Can't figure out : which is owning side n which is inverse side.
+- 3. How to tell hibernate ? : using annotation attribute :  mappedBy
+- 4. where to add mappedBy : inverse side (Vendor : @OneToMany)
+- 5. what should be value of mapppedBy : name of the mapping property  , appearing in owning side field name  
+
+
+6.  What will happen in the below case (if no cascsade option supplied) in DB ? 
+```java
+Vendor v1=new Vendor(....);
+v1.getBankAccounts().add(a1);...add(a2) ...add(a3);//parent ---> child
+//i.e vendor has 3 accounts 
+session.save(v1);
+```
+- 1. Ans : 1 record inserted in vendors table
+- 2. If u want : cascading to happen from parent  --> child side :
+  -  add cascade attribute in parent side
+
+7. After adding cascade option , what will happen in the earlier case  ?
+- 4 queries fired/recrdss will be inserted (1 : vendors table , 3 in accts table)
+- but What will be value of FK here  ? --> null
+- what will be output if 
+    - sop(a1.getAcctOwner()) : ---->  null
+    - as child to parent link remaining  
+- Solution : establish reverse association from acct --> vendor (child ---> parent)
+
+
+8. What are helper methods , where do you add them & how ?
+- As per Gavin King's reco :
+- 1. In case of bi-dir association  ,
+   - add helper methods in POJO layer 
+   1. to add the link from parent----> child as well as child--->parent  +
+   3.  add method to remove the link between parent and child
+- eg :
+```java 
+- In Vendor class
+- to add account 
+public void addAccount(BankAccount a)
+{
+ bankAccounts.add(a);//p--> c
+   a.setAcctOwner(this);//c-->p
+}
+- How to removeAccount 
+public void removeAccount(BankAccount a)
+{
+ bankAccounts.remove(a);//p--X--- c
+   a.setAcctOwner(null);//c  ---X ----p
+}
+--- 
+After adding these : 
+eg :
+Vendor v1=new Vendor(....);
+v1.addAccount(a1);....a2 n a3
+//vendor has 3 accounts 
+session.save(v1);
+//1 record will be inserted in vendors table. + 3 records in accts table + FK added/linking
+``` 
+
+9. What will be the name of FK column ? : as per Hibernate or prog ?
+- Hibernate specified 
+- 1. How do u modify ?
+```java
+@JoinColumn(name="vendor_id")
+@ManyToOne
+private Vendor acctOwner;
+```
+
+10. Given :
+-  1 vendor ---has 3 child records.
+- Input : vendor id
+```java
+Vendor v = session.get(Vendor.class, vendorId);
+if(v != null) //v : PERSISTENT : in l1 cache , in DB
+  session.delete(v);
+```
+- What will happen ? :
+   -  4 delete queries will be fired
+   -   (accts : 3 , vendors : 1)
+   -   This happens thanks to cascadeType.ALL
+
+11. What will happen in DB ?
+- Suppose 1 vendors has 3 accts.
+- I/P : vendor id , acct id
+```java
+Vendor v = session.get(Vendor.class, vendorId);
+BankAccount a=session.get(BankAccount.class,acctId);
+v.removeAccount(a);//delinking p --> c n c--> p
+tx.commit();
+```
+- Ans : no deletion of record in accts table ,instead it will just set FK : null
+
+- 1. Above will happen if orphanRemoval is not specified ?
+- Final : In parent side
+```java 
+@OneToMany(mappedBy="acctOwner",cascade=CascadeType.ALL,orphanRemoval=true)
+private List<BankAccount> bankAccounts=new AL<>();
+```
+- so, null for FK not allowed , so In child side : 
+- Add NOT Null constraint on FK
+```java
+@ManyToOne
+@JoinColumn(name="vendor_id",nullable=false)
+private Vendor acctOwner;
+```
+
+Copy day9.3 into lab10.1
+Fix build errors
+Edit hibernate.cfh.xml as per your DB settings
+
+12 . Objective
+```java 
+Get Course Details 
+i/p : course name
+
+Display course details
+Display enrolled student details
+```
+- 1. Any problems observed ?
+- Problem associated with one to many 
+> org.hibernate.LazyInitializationException
+- Trigger : by  GetCourseDetails : while accessing the Student details
+
+#### - 2.  WHY ? 
+- Hibernate follows default fetching policies for different types of asso.
+1. one-to-one : EAGER
+2. one-to-many : LAZY
+3. many-to-one : EAGER
+4. many-to-many : LAZY
+- 
+1. one-to-many :
+  - LAZY (Course ---> Student)
+  - Meaning : If you try to fetch details of one side(eg : Course) ,
+  -  will it fetch auto details of many side ?
+       - NO (i.e select query will be fired only on courses table)
+  - Why ? : 
+  - for performance 
+
+- 1. When will hibernate throw LazyInitializationException ?
+   - Any time you are trying to access un-fetched data from DB , in a detached manner(outside the session scope)
+   - cases / triggers for exception:
+    1.  one-to-many
+    2. many-many
+    3. session load() method 
+
+   - un fetched data : in Course obj : represented by : proxy (substitution/place holder) : 
+   - collection of proxies
+   - proxy => un fetched data from DB
+
+
+- 2. Solutions
+   1. Change the fetching policy of hibernate for one-to-many to : EAGER
+     - eg :
+    ```java 
+      @OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL,fetch=FetchType.EAGER)  
+	   private List<Student> students=new ArrayList<>();
+    ```
+    - 1.  Is it recommended soln ? :
+      -  NO (since even if you just want to access one side details , hib will fire query on many side) -
+      -  will lead to worst performance. 
+    - Use case : when size of many is very small.
+
+
+   2.  Access the size of the collection within session scope : soln will be applied in DAO layer
+     ```java   
+      @OneToMany(mappedBy = "selectedCourse",cascade = CascadeType.ALL)  
+      	private List<Student> students=new ArrayList<>();
+    ```     
+    -  Solution : Access the size of the collection within session scope : soln will be applied in DAO layer
+    - Dis Adv : Hibernate fires multiple queries to get the complete details
+
+   3. How to fetch the complete details , in a single join query ?
+    - Using "join fetch" keyword in JPQL
+    > String jpql = "select c from Course c left outer join fetch c.students where c.title=:ti";
+    - most recommended this approach 
+    - Q : How to fetch complete details of vendor + bank accounts
+    - eg : jpql ="select v from Vendor v join fetch v.accounts where v.email=:em";
+
+
+- 2. Another trigger for lazy init exception 
+: Session's API 
+> load()
+- Understand get vs load.
+!['getvsLoad'](day10.2_get_vs_load.jpg)
+
+
+2. One to one (can be uni directional as well as bi directional)
+
+eg : Student 1<---->1 Address
+
+ Bi directional association between Student n Address
+
+Student POJO : inverse side (parent)
+sid ,name , email, selectedCourse
+Which annotations 
+@OneToOne(mapedBy="stud",cascade=CascadeType.ALL)
++private Address adr;
+
+Add helper method
+addAddress , removeAddress
+
+
+Address POJO  : adrId, city ,state,country , phone : owning side (child)
+Which annotations ?
+@OneToOne
+@JoinColumn(name="sid",nullable=false)
++ private Student stud;
+
+
+Objective :
+1. Assign address to a student
+I/P : student email, adr details
+
+
+2. Display student details
+I/P : student email
+Q : student n address + course : single join query
+
+3. Run Cancel admission later to confirm : cascade on delete
+-------------------------------
+3. Entity type  vs Value Type
+
+eg : Student HAS-A AdharCard
+If you want to store : adhar card info(num,date...) not in a separate table BUT as additional cols in the student table  : How ?
+How many classes : 2 (Student , AdharCard)
+ How many tables : 1
+How to tell Hibernate , whatever follows is a Value type ?
+JPA : @Embeddable : mandatory (class level)
+Value types can't have : @Entity , @Id
+
+How to tell Hibernate , to embed details of AdharCard in Student ?
+In Student class : add a property
+@Embedded //optional
+private AdharCard  card;
+
+Answer this
+String jpql="select s from Student s where s.email=:em"
+Which details will it fetch (assume : Student has a Address, Student has a Adhar card , has a course : but lazy)
+Ans : Student , adr , card 
+
+String jpql="select a from AdharCard a where a.cardNumber=:num"
+Which details will it fetch : throw Exc : POJO not mapped.
+
+
+Objective : Link address details , adhar card details to existing student
+I/P : email , adr details , card details
+
+
+Student HAS-A hobbies (names of hobbies : string)
+Additional property in Student pojo : private List<String> hobbies;
+eg of value type : collection of basic value type 
+one to many association between Entity n collection of basic value types(embeddable)
+
+
+How to tell hibernate about collection of embeddables ?
+@ElementCollection : mandatory
+In this case , who will decide name of collection table : Hibernate.
+How to specify name of the collection table ?
+@CollectionTable(.....) : optional BUT recommended
+
+Student HAS-A EducationQualifications
+
+4. Integration of web app & hibernate.
+
+
+## today 
+
+1.  Entity Types :
+- 1. If an object has its own database identity (primary key value) then its type is Entity Type.
+- 2. An entity has its own lifecycle. It may exist independently of any other entity.
+- 3. An object reference to an entity instance is persisted as a reference in the database (a foreign key value).
+eg :  College is an Entity Type. It has its own database identity (It has primary key).
+- 4. Manadatory annotations -- @Entity + @Id
+
+2. Value Types :
+- 1. If an object dont have its own database identity (no primary key value) then its type is Value Type.
+- 2. Value Type object belongs to an Entity Type Object.
+- 3. Its embedded in the owning entity and it represents the table column in the database.
+- 4. The lifespan of a value type instance is bounded by the lifespan of the owning entity instance.
+- 5. Annotation -- @Embeddable
+
+Different types of Value Types
+
+Basic, Composite, Collection Value Types :
+1. Basic Value Types :
+Basic value types are : they map a single database value (column) to a single, non-aggregated Java type.
+Hibernate provides a number of built-in basic types.
+all primitive types ,String, Character, Boolean, Integer, Long, Byte,  etc.
+OPtional : @Basic
+
+2. 
+Composite Value Types :
+In JPA composite types also called Embedded Types. Hibernate traditionally called them Components.
+2.1 Composite Value type looks like exactly an Entity, but does not have it's own lifecycle and identifier.
+Will never have : @Entity & @Id
+
+Annotations Used
+
+1. @Embeddable : Mandatory
+Defines a class whose instances are stored as an intrinsic part of an owning entity and share the identity of the entity. Each of the persistent properties or fields of the embedded object is mapped to the database table for the entity. It doesn't have own identifier. 
+eg : Address is eg of Embeddable
+Student HAS-A Address(eg of Composition --i.e Address can't exist w/o its owning Entity i.e Student)
+College HAS-A Address (eg of Composition --i.e Address can't exist w/o its owning Entity i.e College)
+BUT Student will have its own copy of Address & so will College(i.e Value Types don't support shared reference)
+
+
+2. @Embedded : optional
+Specifies a persistent field or property of an entity whose value is an instance of an embeddable class. The embeddable class must be annotated as Embeddable. 
+eg : Address is embedded in College and User Objects.
+
+3. @AttributesOverride :
+Used to override the mapping of a Basic (whether explicit or default) property or field or Id property or field.
+
+In Database tables observe the column names. Student table having STREET_ADDRESS column and College table having STREET column. These two columns should map with same Address field streetAddress. @AttributeOverride gives solution for this.
+To override multiple column names for the same field use @AtributeOverrides annotation.
+eg : In Student class : 
+@Embedded
+ @AttributeOverride(name="streetAddress", column=@Column(name="STREET_ADDRESS"))
+private Address address;
+where  , name --POJO property name in Address class 
+  
+3.
+Collection Value Types :
+Hibernate allows to persist collections.
+But Collection value Types can be either  collection of Basic value types, Composite types and custom types.
+eg :
+Collection mapping means mapping group of values to the single field or property. But we cant store list of values in single table column in database. It has to be done in a separate table.
+
+eg : Collection of embeddables
+@ElementCollection
+	@CollectionTable(name="CONTACT_ADDRESS", joinColumns=@JoinColumn(name="USER_ID"))
+	@AttributeOverride(name="streetAddress", column=@Column(name="STREET_ADDRESS"))
+	private List<ContactAddress> address;
+	
+eg : collection of basic type
+	@ElementCollection
+	@CollectionTable(name="Contacts", joinColumns=@JoinColumn(name="ID"))
+	@Column(name="CONTACT_NO")
+	private Collection<String> contacts;

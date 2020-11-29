@@ -1385,7 +1385,7 @@ public static void main(String[] args) {
 - dao 
 
 ```java
-@Override
+   @Override
 	public String changePassword(String email, String oldPwd, String newPwd) {
 	String msg = "password change failed";
 	String jpql = "select u from User u where u.email=:em and u.password=:pass";
@@ -1433,7 +1433,7 @@ public static void main(String[] args) {
 - main 
 
 ```java
-public static void main(String[] args) {
+  public static void main(String[] args) {
 		// Testing bootstrapping of hibernate configuration (creating singleton n 
 		// immutable instance of SessionFactory(sf)	
 	try(org.hibernate.SessionFactory sf = getSf(); Scanner sc = new Scanner(System.in)) {
@@ -1458,7 +1458,7 @@ i/p  : email n password
 
 - dao 
 ```java
-@Override
+  @Override
 	public String unsubscribeUser(String email, String password) {
 		String mesg="User un subscription failed...";
 		// add jpql : to authenticate user
@@ -1492,7 +1492,7 @@ i/p  : email n password
 
 - main 
 ```java
-public static void main(String[] args) {
+    public static void main(String[] args) {
 		// Testing bootstrapping of hibernate configuration (creating singleton n
 		// immutable singleton instance of SessionFactory (SF)
 		try(SessionFactory sf=getSf();Scanner sc=new Scanner(System.in))
@@ -1515,7 +1515,7 @@ merge
 
 - dao 
 ```java
-@Override
+   @Override
 	public String testSessionApi(User user) {
 String msg = "User reg failed";
 		
@@ -2059,4 +2059,219 @@ public class CancelStudentAdmission {
 		}
 
 	}
+```
+
+
+# day 10 
+
+## sequence 
+
+## demo 
+
+1. demo on solution to LazyInitiatization Exception 
+ - 1. using fetch  annotation attribute
+  - it is not recommended 
+```java
+// one to many : , bi directional association  between two entities : onse sid eof asso : 
+	// parent : and non -owning (inverse ) side of association 
+	@OneToMany(mappedBy ="selectedCourse", cascade = CascadeType.ALL,orphanRemoval = true, fetch = FetchType.EAGER)
+	private List<Student> students=new ArrayList<>();
+```
+
+ - 2. call size method on Collection , to hint hibernate to call select on many side table  
+
+  ```java
+         // c : persistent
+		// Hint : access the size of collection witn in session scope 
+		c.getStudents().size(); 
+  ```
+
+ - 3. - Using "join fetch" keyword in JPQL
+    > String jpql = "select c from Course c left outer join fetch c.students where c.title=:ti";
+    - most recommended this approach 
+
+   ```java
+	String jpql = "select c from Course c join fetch c.students where c.name=:nm";
+   ```
+
+2. Joining Tables 
+
+- 0. mapping in hibernate.cfg.xml file
+```xml
+<hibernate-configuration>
+
+	<session-factory>
+        <mapping class="pojos.Course" />  
+		<mapping class="pojos.Student" />
+		<mapping class="pojos.Address" />
+		</session-factory>
+</hibernate-configuration>	
+
+```
+
+- 1. Address pojo  
+  - creating FK to connect to Student pojo
+  - on using annotation on parent pojo object
+```java
+
+@Entity 
+@Table(name="address_tbl")
+public class Address {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "address_id")
+	private Integer addressId; 
+	
+	@Column(length = 20)
+	private String city; 
+	@Column(length = 20)
+	private String state ; 
+	@Column(length = 20)
+	private String country; 
+	@Column(length = 20,unique = true)
+	private String phoneNo; 
+	
+	// bi directional association between entities  :owning side
+	
+	@OneToOne 
+	@JoinColumn(name = "stud_id", nullable = false)
+	private Student stud ; 
+	
+	public Address() {
+		// TODO Auto-generated constructor stub
+		System.out.println("in address constr");
+	}
+```
+
+- 2. Student pojo 
+  - mapping PK of Student i.e FK of   Address pojo using mappedBy
+  - its automatically created, on using annotation on child table pojo object
+
+```java
+@Entity
+@Table(name="students_tbl")
+public class Student {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "student_id")
+	private Integer studentId;
+	@Column(length = 20,unique = true)
+	private String email;
+	@Column(length = 20)
+	private String name;
+	
+	// bi - directional association between entities 
+	// many side of association  and owning side(since it has FK column) 
+	@ManyToOne(fetch = FetchType.LAZY) /* (fetch = FetchType.LAZY) */ // fetch policy:  eager by default 
+	@JoinColumn(name = "c_id",nullable = false) // constraint : Not null : optional but recommended
+	private Course selectedCourse;
+	
+	@OneToOne(mappedBy = "stud", cascade = CascadeType.ALL ) // Eager
+	private Address studentAdr; 
+
+	// one to one association between entity and value type
+	
+	@Embedded //OPTIONAL added only for understanding it is embedded 
+	private AdharCard card;
+	 
+	public Student() {
+		System.out.println("in student cnstr");
+	}
+	public Student(String email, String name) {
+		super();
+		this.email = email;
+		this.name = name;
+	}
+	// one to many asso between entity and collection of value types : it is Uni directional 
+	
+	@ElementCollection // mandetory  : if not : mapping exception 
+	@CollectionTable(name = "hobbies_tbl",joinColumns = @JoinColumn(name = "s_id") ) // optional but recommended
+	@Column(name = "hobby",length = 20)
+	private List<String> hobbies = new ArrayList<>(); 
+	// one to many asocation between entity n value type : uni directional(entity--> value type)
+	
+	@ElementCollection
+	@CollectionTable(name = "edu_qualifications",joinColumns = @JoinColumn(name = "s_id"))
+	private List<EducationalQualifications> qualifications= new ArrayList<>(); 
+	
+```
+
+3. Embedding
+1. value type table into Entity type table
+- in case of one to one relation 
+- value type are added as column to  parent table
+- 1. Aadhar table : value type
+```java
+
+@Embeddable // mandetory  : required to tel HB : that whatever follows is value type , 
+// whic h does not have a standAlone existence and its detials must be embedded in owning entity
+public class AdharCard {
+
+@Column(name = "card_number",length = 20,unique = true)
+	private String cardNumber ;
+@Column(length = 50)
+	private String location;
+@Column(name = "created_on")
+	private LocalDate createdOn; 
+	
+	public AdharCard() {
+		// TODO Auto-generated constructor stub
+		System.out.println("in aadhar contr");
+	}
+
+```
+
+- 2. in parent table 
+
+```java
+@Entity
+@Table(name="students_tbl")
+public class Student {
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "student_id")
+	
+	// bi - directional association between entities 
+	// many side of association  and owning side(since it has FK column) 
+	@ManyToOne(fetch = FetchType.LAZY) /* (fetch = FetchType.LAZY) */ // fetch policy:  eager by default 
+	@JoinColumn(name = "c_id",nullable = false) // constraint : Not null : optional but recommended
+	private Course selectedCourse;
+	
+	@OneToOne(mappedBy = "stud", cascade = CascadeType.ALL ) // Eager
+	private Address studentAdr; 
+	
+	// one to one association between entity and value type
+	
+	@Embedded //OPTIONAL added only for understanding it is embedded 
+	private AdharCard card;
+	 
+	public Student() {
+		System.out.println("in student cnstr");
+	}
+	public Student(String email, String name) {
+		super();
+		this.email = email;
+		this.name = name;
+	}
+```
+
+2. in case of one to many , relation a separate table is created of Value types , for maintaining normalization 
+- 1. for hobby value type table
+	```java
+	// one to many asso between entity and collection of value types : it is Uni directional 
+	
+	@ElementCollection // mandetory  : if not : mapping exception 
+	@CollectionTable(name = "hobbies_tbl",joinColumns = @JoinColumn(name = "s_id") ) // optional but recommended
+	@Column(name = "hobby",length = 20)
+	private List<String> hobbies = new ArrayList<>(); 
+	```
+	
+- 2. edu qualification table created
+```java
+	// one to many asocation between entity n value type : uni directional(entity--> value type)
+	
+	@ElementCollection
+	@CollectionTable(name = "edu_qualifications",joinColumns = @JoinColumn(name = "s_id"))
+	private List<EducationalQualifications> qualifications= new ArrayList<>(); 	
 ```
