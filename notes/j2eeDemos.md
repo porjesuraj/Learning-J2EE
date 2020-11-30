@@ -1646,7 +1646,7 @@ System.out.println("session api status " + dao.testSessionApi(u1));
 	}
 ```
 
-12.saving image to DB 
+12. saving image to DB 
 
 - dao 
 ```java
@@ -1719,6 +1719,56 @@ public static void main(String[] args) {
 			e.printStackTrace();
 		}
 		
+	}
+```
+
+13. retrieve image from DB
+- dao 
+```java
+@Override
+	public String restoreImage(int userId, String fileName) throws Exception {
+		String mesg = "Restoring image failed....";
+		//Session
+		Session session=getSf().getCurrentSession();
+		//tx
+		Transaction tx=session.beginTransaction();
+		try {
+			//get user details from id
+			User user=session.get(User.class, userId);
+			if(user != null) {
+				//user : PESRSISTENT
+				//gets image from user POJO in byte[] form n creates a new file if none exists n write bin data to it.
+				FileUtils.writeByteArrayToFile(new File(fileName), user.getImage());
+				mesg="Restored image succefully....";
+			}
+			tx.commit();
+			
+		} catch (Exception e) {
+			if(tx != null)
+				tx.rollback();
+			throw e;
+		}
+		return mesg;
+	}
+```
+
+- main
+```java
+
+	public static void main(String[] args) {
+		// Testing bootstrapping of hibernate configuration (creating singleton n
+		// immutable singleton instance of SessionFactory (SF)
+		try(SessionFactory sf=getSf();Scanner sc=new Scanner(System.in))
+		{
+			//dao instance 
+			UserDaoImpl dao=new UserDaoImpl();
+			System.out.println("Enter User id n image file name along with path , to restore image from DB");
+			System.out.println(dao.restoreImage(sc.nextInt(), sc.next()));
+			System.out.println("cntd....");
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 ```
 
@@ -2568,6 +2618,32 @@ return acctDao.getAllAccountsByVendorId(vendorId);
 
 
 # Day11
+
+## sequence 
+-  Open spring api docs in your web browser (from spring-help/javadocs)
+
+2. Create from scratch spring based Java SE application.
+0. In eclipse , change perspective to Java (if not already in Java)
+1. Create Java project 
+2. Create User lib --containing spring/hibernate/jdbc drvr/REST.... JARs.
+
+DON'T use earlier created hibernate lib.
+
+
+3. Add user lib in build path.(R click --build path --confgure build path--add user lib --only spring_all)
+
+3.5 Copy dependent & dependency packages (containing spring beans) from day11_help/spring-help/rdy code.
+
+4. Create new src folder --<resources> & create spring bean config xml file.
+R click on src --new src folder --resources
+R click on resource --new --spring bean configuration file --spring-config.xml
+5. Choose  namespace beans
+6. Configure dependency n dependent beans (as discussed)
+For setter based D.I
+7. Create a tester application , to start Spring container & run this as java application , to confirm spring in core java.
+Confirm spring bean life cycle (along with scopes, lazy-init,init n destroy methods)
+
+
 
 ## demo on Dependency Injection  configuration 
 
