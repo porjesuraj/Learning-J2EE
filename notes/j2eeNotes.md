@@ -2889,7 +2889,7 @@ Display enrolled student details
   - Why ? : 
   - for performance 
 
-- 1. When will hibernate throw LazyInitializationException ?
+ - 1. When will hibernate throw LazyInitializationException ?
    - Any time you are trying to access un-fetched data from DB , in a detached manner(outside the session scope)
    - cases / triggers for exception:
     1.  one-to-many
@@ -2901,7 +2901,7 @@ Display enrolled student details
    - proxy => un fetched data from DB
 
 
-- 2. Solutions
+ - 2. Solutions
    1. Change the fetching policy of hibernate for one-to-many to : EAGER
      - eg :
     ```java 
@@ -2930,19 +2930,20 @@ Display enrolled student details
     - eg : jpql ="select v from Vendor v join fetch v.accounts where v.email=:em";
 
 
-- 2. Another trigger for lazy init exception 
-: Session's API 
-> load()
-- Understand get vs load.
-!['getvsLoad'](day10.2_get_vs_load.jpg)
+ - 2. Another trigger for lazy init exception 
+ : Session's API 
+ > load()
+ - Understand get vs load.
+ !['getvsLoad'](day10.2_get_vs_load.jpg)
 
 
-2. One to one (can be uni directional as well as bi directional)
+2. One to one 
+ - (can be uni directional as well as bi directional)
+ - eg : Student 1<---->1 Address
 
-eg : Student 1<---->1 Address
-
- Bi directional association between Student n Address
-
+ - Bi directional association between Student n Address
+ - 1. Studnet pojo 
+```java
 Student POJO : inverse side (parent)
 sid ,name , email, selectedCourse
 Which annotations 
@@ -2951,69 +2952,60 @@ Which annotations
 
 Add helper method
 addAddress , removeAddress
-
-
+```
+- 2. Address pojo (child)
+```java
 Address POJO  : adrId, city ,state,country , phone : owning side (child)
 Which annotations ?
 @OneToOne
 @JoinColumn(name="sid",nullable=false)
 + private Student stud;
+```
+
+- 3. Objective :
+    1. Assign address to a student
+    I/P : student email, adr details
+    2. Display student details
+    I/P : student email
+    Q : student n address + course : single join query
+    
+    3. Run Cancel admission later to confirm : cascade on delete
+
+### Entity type  vs Value Type
 
 
-Objective :
-1. Assign address to a student
-I/P : student email, adr details
-
-
-2. Display student details
-I/P : student email
-Q : student n address + course : single join query
-
-3. Run Cancel admission later to confirm : cascade on delete
--------------------------------
-3. Entity type  vs Value Type
-
-eg : Student HAS-A AdharCard
-If you want to store : adhar card info(num,date...) not in a separate table BUT as additional cols in the student table  : How ?
+- eg : Student HAS-A AdharCard
+1. If you want to store : adhar card info(num,date...) not in a separate table BUT as additional cols in the student table   How ?
 How many classes : 2 (Student , AdharCard)
  How many tables : 1
-How to tell Hibernate , whatever follows is a Value type ?
-JPA : @Embeddable : mandatory (class level)
-Value types can't have : @Entity , @Id
 
-How to tell Hibernate , to embed details of AdharCard in Student ?
-In Student class : add a property
+2. How to tell Hibernate , whatever follows is a Value type ?
+
+> JPA : @Embeddable : mandatory (class level)
+- Value types can't have : @Entity , @Id
+
+3. How to tell Hibernate , to embed details of AdharCard in Student ?
+- In Student class : add a property
+```java
 @Embedded //optional
 private AdharCard  card;
+```
+4. Answer this
 
-Answer this
-String jpql="select s from Student s where s.email=:em"
+- 1. > String jpql="select s from Student s where s.email=:em"
 Which details will it fetch (assume : Student has a Address, Student has a Adhar card , has a course : but lazy)
 Ans : Student , adr , card 
 
-String jpql="select a from AdharCard a where a.cardNumber=:num"
-Which details will it fetch : throw Exc : POJO not mapped.
+- 2. String jpql="select a from AdharCard a where a.cardNumber=:num"
+- Which details will it fetch : throw Exc : POJO not mapped.
 
 
-Objective : Link address details , adhar card details to existing student
-I/P : email , adr details , card details
-
-
-Student HAS-A hobbies (names of hobbies : string)
-Additional property in Student pojo : private List<String> hobbies;
-eg of value type : collection of basic value type 
-one to many association between Entity n collection of basic value types(embeddable)
-
-
-How to tell hibernate about collection of embeddables ?
-@ElementCollection : mandatory
-In this case , who will decide name of collection table : Hibernate.
-How to specify name of the collection table ?
-@CollectionTable(.....) : optional BUT recommended
-
-Student HAS-A EducationQualifications
-
-4. Integration of web app & hibernate.
+5. How to tell hibernate about collection of embeddables ?
+> @ElementCollection : mandatory
+- In this case , who will decide name of collection table : Hibernate.
+- How to specify name of the collection table ?
+> @CollectionTable(.....) : optional BUT recommended
+- e.g -> Student HAS-A EducationQualifications
 
 
 ## today 
@@ -3032,61 +3024,244 @@ eg :  College is an Entity Type. It has its own database identity (It has prim
 - 4. The lifespan of a value type instance is bounded by the lifespan of the owning entity instance.
 - 5. Annotation -- @Embeddable
 
-Different types of Value Types
+3. Different types of Value Types
 
-Basic, Composite, Collection Value Types :
-1. Basic Value Types :
-Basic value types are : they map a single database value (column) to a single, non-aggregated Java type.
-Hibernate provides a number of built-in basic types.
-all primitive types ,String, Character, Boolean, Integer, Long, Byte,  etc.
-OPtional : @Basic
+ - Basic, Composite, Collection Value Types :
+ - 1. Basic Value Types :
+   - Basic value types are :
+   -  they map a single database value (column) to a single, non-aggregated Java type.
+   - Hibernate provides a number of built-in basic types.
+   - all primitive types ,String, Character, Boolean, Integer, Long, Byte,  etc.
+   OPtional : @Basic
 
-2. 
-Composite Value Types :
-In JPA composite types also called Embedded Types. Hibernate traditionally called them Components.
-2.1 Composite Value type looks like exactly an Entity, but does not have it's own lifecycle and identifier.
-Will never have : @Entity & @Id
+ - 2. Composite Value Types :
+   - In JPA composite types also called Embedded Types.
+   -  Hibernate traditionally called them Components.
+   - 1.  Composite Value type looks like exactly an Entity,
+     -  but does not have it's own lifecycle and identifier.
+     - it Will never have : @Entity & @Id
 
-Annotations Used
+4. Annotations Used
 
-1. @Embeddable : Mandatory
-Defines a class whose instances are stored as an intrinsic part of an owning entity and share the identity of the entity. Each of the persistent properties or fields of the embedded object is mapped to the database table for the entity. It doesn't have own identifier. 
-eg : Address is eg of Embeddable
-Student HAS-A Address(eg of Composition --i.e Address can't exist w/o its owning Entity i.e Student)
-College HAS-A Address (eg of Composition --i.e Address can't exist w/o its owning Entity i.e College)
-BUT Student will have its own copy of Address & so will College(i.e Value Types don't support shared reference)
+- 1. @Embeddable : Mandatory
+   - Defines a class whose instances are stored as an intrinsic part of an owning entity and share the identity of the entity. 
+   -   Each of the persistent properties or fields of the embedded object is mapped to the database table for the entity
+   -    It   doesn't have own identifier. 
+   - eg : 
+   -  1.  Address is eg of Embeddable
+      -  Student HAS-A Address(eg of Composition --i.e Address can't exist w/o its owning Entity i.e Student)
+      -  College HAS-A Address (eg of Composition --i.e Address can't exist w/o its owning Entity i.e College)
+  - BUT Student will have its own copy of Address & so will College(i.e Value Types don't support shared reference)
 
 
-2. @Embedded : optional
-Specifies a persistent field or property of an entity whose value is an instance of an embeddable class. The embeddable class must be annotated as Embeddable. 
-eg : Address is embedded in College and User Objects.
+- 2. @Embedded : optional
+   - Specifies a persistent field or property of an entity whose value is an instance of an embeddable class.
+   -  The embeddable class must be annotated as Embeddable. 
+   - eg : Address is embedded in College and User Objects.
 
-3. @AttributesOverride :
-Used to override the mapping of a Basic (whether explicit or default) property or field or Id property or field.
-
-In Database tables observe the column names. Student table having STREET_ADDRESS column and College table having STREET column. These two columns should map with same Address field streetAddress. @AttributeOverride gives solution for this.
-To override multiple column names for the same field use @AtributeOverrides annotation.
-eg : In Student class : 
+- 3. @AttributesOverride :
+- Used to override the mapping of a Basic (whether explicit or default) property or field or Id property or field.
+- In Database tables observe the column names. 
+  - Student table having STREET_ADDRESS column and
+  -  College table having STREET column. 
+  -  These two columns should map with same Address field streetAddress.
+  >   @AttributeOverride gives solution for this.
+- To override multiple column names for the same field use @AtributeOverrides annotation.
+- eg : In Student class : 
+```java
 @Embedded
  @AttributeOverride(name="streetAddress", column=@Column(name="STREET_ADDRESS"))
 private Address address;
 where  , name --POJO property name in Address class 
-  
-3.
-Collection Value Types :
-Hibernate allows to persist collections.
-But Collection value Types can be either  collection of Basic value types, Composite types and custom types.
-eg :
-Collection mapping means mapping group of values to the single field or property. But we cant store list of values in single table column in database. It has to be done in a separate table.
+```
 
+- 3. Collection Value Types :
+  - Hibernate allows to persist collections.
+  - But Collection value Types can be either  collection of Basic value types, Composite types and custom types.
+  - Collection mapping means mapping group of values to the single field or property. 
+  - But we cant store list of values in single table column in database.
+  -  It has to be done in a separate table.
 eg : Collection of embeddables
+```java
 @ElementCollection
 	@CollectionTable(name="CONTACT_ADDRESS", joinColumns=@JoinColumn(name="USER_ID"))
 	@AttributeOverride(name="streetAddress", column=@Column(name="STREET_ADDRESS"))
 	private List<ContactAddress> address;
-	
+```
+
 eg : collection of basic type
+```java
 	@ElementCollection
 	@CollectionTable(name="Contacts", joinColumns=@JoinColumn(name="ID"))
 	@Column(name="CONTACT_NO")
 	private Collection<String> contacts;
+```
+
+
+# day 11 
+
+
+## to read
+
+### Why Spring 
+It simplifies Java development. It's one-stop-shop.
+Excellent for integration with existing frameworks.
+Reduces boiler-plate code.
+Allows to build applications using loose coupling achieved via IoC(Inversion of control) & AOP(aspect oriented programming)
+
+What is it ?
+It is a container + framework.
+
+Why Container 
+It manages the life cycle of spring beans (eg : controller,rest controller , dao,service)
+
+Why Framework ?
+It provides readymade implementation of patterns & helps in building enterprise applications.
+
+It is the most popular application development framework for enterprise Java. It is used to create high performant, easily testable, and reusable code.
+
+Spring framework is an open source Java platform. 
+Founder is  Rod Johnson and was first released under the Apache  license in June 2003.
+Currently hosted on Pivotal/VMware
+
+Why Spring 
+
+1. Spring is lightweight .The basic version of Spring framework is around 2MB.
+
+2. It supports in developing any Java application, but there are extensions(web MVC)  for building web applications on top of the Java EE platform. 
+
+3. It helps programmers  to make J2EE development easier to use and promotes good programming practices by enabling a POJO-based programming model.
+4. Excellent n easy testing support.(Thanks to D.I)
+
+5. Supports smooth integration with ORM
+
+6. Easy integration with web MVC applications including web sockets 
+(for async communication between server & client)
+Spring's web framework is a  web MVC framework, which is a great alternative to web frameworks such as Struts 
+
+7. It is organized in a modular fashion. Even though it's extensive , you have to worry only about the those modules that you need  and ignore the rest.
+
+8. Spring does not re-invent the wheel, instead it makes use of already existing frameworks like Hibernate , making its integration easier.
+
+9. It translates technology-specific exceptions (thrown by JDBC, Hibernate, or JDO, for example) into consistent, unchecked exceptions.
+
+10. 
+It provides a consistent transaction management interface that can support  a local transaction (using a single database) as well as  global transactions (using JTA over multiple databases).
+
+Main winning feature of Spring is : loose coupling between the modules.
+
+How does it achieve loose coupling ?
+1. IoC -- IoC is achieved using Dependency Injection(D.I)
+2. Aspect Oriented Programming(AOP)
+
+
+### Enter Spring
+
+Why Spring ?
+Simplifies overall java development
+
+What is it ?
+container --manages life cycle of spring beans
+(spring bean --- java obj whose life cycle completely managed by SC(spring container)
+eg : rest controller, controller, service,DAO.
+framework --rdy made implementation of std patterns(eg :MVC,Proxy,singleton,factory, ORM ...)
+
+
+Spring is modular n extensive framework.
+
+
+Why Spring : loosely coupled application
+Via : D.I / AOP
+
+
+What is dependency injection ?
+
+
+In JSP---JB---DAO(Utils) -- POJO --DB layers
+Dependent Objs -- JavaBean , Hibernate based DAO, JDBC Based DAO
+Dependencies --- DAO,Utils(SessionFactory) , Utils(DB connection)
+
+All of above are examples of tight coupling.
+Why --Any time the nature of the dependency changes , dependent obj is affected(i.e u will have to make changes in dependent obj)
+
+
+Tight coupling --strongly un desirable.
+Why -- difficult to maintain or extend.
+
+In above examples , Java bean creates the instance of DAO.
+Hibernate based DAO , gets SF from HibUtils.
+JDBC based DAO ,gets db connection from DBUtils.
+
+i.e dependent objects are managing their dependencies. ---traditional/conventional programming model.
+
+What is D.I ?(Dependency injection=wiring=collaboration between dependent & dependency)
+Instead of dependent objs managing their dependencies , 3rd party containers(eg : Angular / Spring/ EJB) will auto create the dependecies & make it available to dependents, directly @ run time.
+
+Since dependent are no longer managing dependencies --its called as IoC ---Inversion of control
+
+Hollywood principle --You don't call us , we will call you....
+SC --- > Dependent objs (i.e SC will create the dependencies for the dependent objs)
+
+eg : UserController
+@Autowired
+private IUserService service;
+
+In DAO layer
+@AutoWired
+private SessionFactory sf;
+
+
+Pre requisite : Already added STS plug-in / STS
+Steps for spring nature to Java SE (core java application)
+Important :  Extract spring api-docs
+0. Change perspective to Java
+1. Create Java project
+2. Create a new User lib --containing spring/hibernate/jdbc drvr/REST.... JARs.(from day11_help/spring-help/spring5-hibernate5-rest-jars)
+DON'T use earlier created hibernate lib.
+
+
+3. Add user lib in build path.(R click --build path --confgure build path)
+3.5 Copy dependent & dependency beans from day11_help/spring-help/rdy code.
+4. Create new src folder --<resources> & create spring bean config xml file.(Using STS support)
+5. Add namespace <beans>
+
+
+More details about <bean> tag 
+Attributes
+1. id --mandatory --bean unique id
+2. class --- mandatory -- Fully qualified bean class name
+3. scope --- In Java SE --- singleton | prototype
+In web app singleton | prototype | request | session
+Def scope = singleton
+singleton --- SC will share single bean instance for multiple requests/demands
+prototype -- SC creates NEW bean instance per  request/demand.
+
+4. lazy-init --- def value=false.
+Applicable only to singleton beans.
+SC will auto create spring bean instance --- @ SC start up.
+
+5. init-method --name of init style method(public void anyName() throws Exception{..})
+called by SC after setter based D.I
+
+6. destroy-method --name of destroy style method
+(public void anyName() throws Exception{..})
+called by SC before GC of spring bean (applicable only to singleton beans)
+
+
+API 
+How to get ready to use spring beans from SC ?
+API of BeanFactory
+public <T> T getBean(String beanId,Class<T> beanClass) throws BeansException
+
+Spring bean life cycle
+Types of wiring 
+
+
+###
+
+
+
+
+
+
+

@@ -2524,7 +2524,7 @@ return acctDao.getAllAccountsByVendorId(vendorId);
 
 ```
 
-- 2. vendor_details.jsp
+- 3. vendor_details.jsp
 ```java
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
@@ -2556,7 +2556,7 @@ return acctDao.getAllAccountsByVendorId(vendorId);
 </html>
 ```
 
-- 2. admin.jsp
+- 4. admin.jsp
 ```java
 <%-- display login successful message --%>
 
@@ -2566,4 +2566,464 @@ return acctDao.getAllAccountsByVendorId(vendorId);
 </html>
 ```
 
+
+# Day11
+
+## demo on Dependency Injection  configuration 
+
+1. demo on singleton and prototype scope on bean 
+
+- in create:  resource ---> config.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="http" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport"/>
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" > 
+<!-- setter based D.I -->
+<property name="myTransport" ref="http"/> 
+</bean>
+</beans>
+```
+- 2. dependency 
+- to make loose coupling 
+- on lhs of Transporter
+```java
+public class ATMImpl implements ATM {
+	/* private TestTransport myTransport = new TestTransport(); */
+	/* private Transport myTransport = new HttpTransport(); */
+	private Transport myTransport;
+	public ATMImpl() {	}
+	@Override
+	public void deposit(double amt) {
+		System.out.println("depositing "+amt);
+		byte[] data=("depositing "+amt).getBytes();
+		myTransport.informBank(data);
+	}
+	@Override
+	public void withdraw(double amt) {
+		System.out.println("withdrawing "+amt);
+		byte[] data=("withdrawing "+amt).getBytes();
+		myTransport.informBank(data);
+	}
+   // setter DI 
+	public void setMyTransport(Transport myTransport) {
+		System.out.println("in set transport setter ");
+		this.myTransport = myTransport;
+	}
+	// init stype method 
+		public void myInit() {
+			System.out.println("in my init of " + getClass().getName() + "dependency " + myTransport);
+		}
+		// destory style method
+	public void myDestroy() {
+		System.out.println("in my destroy of " + getClass().getName() + "dependency " + myTransport);
+	}	
+}
+
+```
+
+- 3. dependent 
+```java
+public class TestTransport implements Transport {
+	public TestTransport() {
+		System.out.println("in cnstr of " +getClass().getName());
+	}
+
+	@Override
+	public void informBank(byte[] data) {
+		System.out.println("informing bank using " + getClass().getName() + " layer");
+	}
+}
+
+```
+- 4. tester
+```java
+public class TestSpring {
+
+	public static void main(String[] args) {
+	// start spring container : using xml based metadata instructions , placed in run time classpath 
+		// class : o.s.c.s(.context.support).ClassPathXmlApplicationContext(String configFIle) throws BeansException
+		try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("config.xml")){
+			System.out.println("SC started ...");
+			// get readymade springbean instance from SC , for invoking B.L
+			System.out.println("making first demand");
+			ATMImpl atmBean = ctx.getBean("my_atm", ATMImpl.class); 
+			
+			// B.L 
+			atmBean.deposit(1000);
+			System.out.println("making second demand");
+			ATMImpl atmBean2 = ctx.getBean("my_atm", ATMImpl.class);
+			
+		System.out.println(atmBean == atmBean2);
+		// System.out.println(atmBean..equals(atmBean2));
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+	}	
+}
+```
+
+
+2. demo on  DI using setter with init and destroy method
+- in create:  resource ---> config.xml
+```xml
+<beans>
+<!-- dependency bean config  -->
+<bean id="test" class="dependency.TestTransport" scope="singleton" lazy-init="false"/>
+<bean  id="http" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport" scope="singleton" lazy-init="true"/>
+<bean id="email" class="dependency.EmailNotification"/>
+<bean id="sms" class="dependency.SMSNotification" />
+<!--  dependent bean config  -->
+<bean id="atm_bean" class="dependent.ATMImpl" 
+   init-method="myInit" destroy-method="myDestroy" >
+<!-- for setter based D.I -->
+<property name="myTransport" ref="soap" />
+<property name="customerNotification" ref="email" />
+</bean> 
+
+</beans>
+
+```
+- 2. dependency 
+```java
+public class SMSNotification implements NotificationService {
+
+	public SMSNotification() {
+	System.out.println("in contr of" + getClass().getName());	
+	}
+	@Override
+	public void notifyCustomer(String txType, double amount) {
+System.out.println(" NOTIFYING CUSTOMER : Tx type "+ txType + " for amount " + amount + " @ " + LocalDateTime.now()  + "VIA SMS");
+	}	
+}
+```
+- 3. dependent 
+```java
+public class ATMImpl implements ATM {
+	private Transport myTransport;
+	private NotificationService[] customerNotification; 
+	public ATMImpl() {
+		System.out.println("in cnstr of " +getClass().getName()+" "+ myTransport);	
+	}
+	@Override
+	public void deposit(double amt) {
+		System.out.println("depositing "+amt);
+		byte[] data=("depositing "+amt).getBytes();
+		myTransport.informBank(data); // dependent object calling method of dependency 
+        // ATM---> NotificationService for alerting customer 
+		for(NotificationService service : customerNotification)
+		      service.notifyCustomer("deposit", amt);
+	}
+
+	@Override
+	public void withdraw(double amt) {
+		System.out.println("withdrawing "+amt);
+		byte[] data=("withdrawing "+amt).getBytes();
+		myTransport.informBank(data);  // dependent object calling method of dependency 
+		for(NotificationService service : customerNotification)
+	      service.notifyCustomer("withdraw", amt);
+	}
+	public void setMyTransport(Transport myTransport) {
+		this.myTransport = myTransport;
+		
+	}
+	
+	// init stype method : mandetory public ,void 
+	//  called in both singleton and prototype scope 
+	// for clean init and destroy code 
+		public void myInit() {
+			System.out.println("in my init of " + getClass().getName() + "dependency " + myTransport);
+		}
+		// destory style method  : mandetory public ,void 
+		// called for only prototype method
+
+	public void myDestroy() {
+		
+		System.out.println("in my destroy of " + getClass().getName() + "dependency " + myTransport	
+	}
+
+	public void setCustomerNotification(NotificationService[] customerNotification) {
+	System.out.println("in set Notification setter");
+		this.customerNotification = customerNotification;	
+	}	
+}
+
+```
+- 4. tester
+```java
+public class TestSpring {
+
+	public static void main(String[] args) {
+		//start spring container in java app: using xml based instruction stored under runtime class path 
+		// o.s.c.s.ClassPathXmlApplicationContext : clas
+		// BeanFactory <== ApplicationContext <=== ClassPathXMlApplicationContext	
+		try(ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("config.xml")) {
+			System.out.println("SC booted");
+			// 1st demand : tell SC to supply located--loaded---instantiated (defauld constr) -- D.I--bean Instance
+			// API : o.s.b.BeanFactory: T getBean(String beanId,Class<T> beanClass) throws BeanException 
+		ATMImpl atm1 = ctx.getBean("atm_bean", ATMImpl.class);
+		// B.L 
+		atm1.deposit(1000);
+		ATMImpl atm2 = ctx.getBean("atm_bean", ATMImpl.class);
+		System.out.println(atm1 == atm2);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+		}}}
+
+```
+
+3. constructor DI 
+- in create:  resource ---> config.xml
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!-- dependency bean config  -->
+<bean id="test" class="dependency.TestTransport" scope="singleton" lazy-init="false"/>
+<bean  id="http" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport" scope="singleton" lazy-init="true"/>
+<bean id="email" class="dependency.EmailNotification"/>
+<bean id="sms" class="dependency.SMSNotification" />
+<!--  dependent bean config  -->
+<bean id="atm_bean" class="dependent.ATMImpl"  init-method="myInit" destroy-method="myDestroy" >
+<!-- for constructor based D.I -->
+<constructor-arg name="t" ref="test" />
+<constructor-arg name="services" ref="sms" />
+</bean> 
+</beans>
+```
+- 2. dependency 
+```java
+```
+
+- 3. dependent 
+```java
+package dependent;
+public class ATMImpl implements ATM {
+	/* private TestTransport myTransport = new TestTransport(); */
+	/* private Transport myTransport = new HttpTransport(); */
+	private Transport myTransport;
+	private NotificationService[] customerNotification; 
+	public ATMImpl(Transport t,NotificationService[] services) {
+	     myTransport = t; 
+		customerNotification = services; 	
+		System.out.println("in cnstr of " +getClass().getName()+" "+ myTransport + services);	
+	}
+	
+	@Override
+	public void deposit(double amt) {
+		System.out.println("depositing "+amt);
+		byte[] data=("depositing "+amt).getBytes();
+		myTransport.informBank(data); // dependent object calling method of dependency 
+        // ATM---> NotificationService for alerting customer 
+		for(NotificationService service : customerNotification)
+		      service.notifyCustomer("deposit", amt);
+	}
+
+	@Override
+	public void withdraw(double amt) {
+		System.out.println("withdrawing "+amt);
+		byte[] data=("withdrawing "+amt).getBytes();
+		myTransport.informBank(data);  // dependent object calling method of dependency 
+		for(NotificationService service : customerNotification)
+	      service.notifyCustomer("withdraw", amt);
+	}
+	// init stype method : mandetory public ,void 
+	//  called in both singleton and prototype scope 
+	// for clean init and destroy code 
+		public void myInit() {}
+		// destory style method  : mandetory public ,void 
+		// called for only prototype method
+	public void myDestroy() {}	
+	
+}
+
+```
+- 4. tester
+```java
+public class TestSpring {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+
+		//start spring container in java app: using xml based instruction stored under runtime class path 	
+		// o.s.c.s.ClassPathXmlApplicationContext : clas
+		// BeanFactory <== ApplicationContext <=== ClassPathXMlApplicationContext
+		
+		try(ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("config.xml")) {
+			
+			System.out.println("SC booted");
+			// 1st demand : tell SC to supply located--loaded---instantiated (defauld constr) -- D.I--bean Instance
+			// API : o.s.b.BeanFactory: T getBean(String beanId,Class<T> beanClass) throws BeanException 
+		ATMImpl atm1 = ctx.getBean("atm_bean", ATMImpl.class);	
+		// B.L 
+		atm1.deposit(1000);
+		} catch (Exception e) {
+			e.printStackTrace();
+			// TODO: handle exception
+		}
+		
+		
+	}
+
+}
+
+```
+
+4. DI with property and constructor 
+- in create:  resource ---> config.xml 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+	<!-- dependency bean config. -->
+	<!-- singleton n eager -->
+	<bean id="test" class="dependency.TestTransport" />
+	<!-- scope=prototype -->
+	<bean id="http" class="dependency.HttpTransport" scope="prototype" />
+	<!-- singleton n lazy -->
+	<bean id="soap" class="dependency.SoapTransport" lazy-init="true" />
+	<!-- add dependency beans for cust notification -->
+	<bean id="email" class="dependency.EmailNotification" />
+	<bean id="sms" class="dependency.SMSNotification" />
+
+	<!-- dependent bean : atm_bean(id) :singleton n eager , dep : setter based D.I 
+		: soap -->
+	<bean id="atm_bean" class="dependent.ATMImpl" 
+		init-method="init123" destroy-method="destroy123">
+		<!-- constructor based D.I -->
+		<constructor-arg name="cash123" value="12345678"/>
+		<!-- setter based D.I -->
+		<property name="myTransport" ref="soap"/>
+		<property name="customerNotification" ref="email"/>		
+	</bean>
+</beans>
+
+            
+```
+- 2. dependency 
+```java
+
+public class ATMImpl implements ATM {
+	private Transport myTransport;
+	private NotificationService[] customerNotification;
+	private double cash;
+
+	public ATMImpl(double cash123) {
+		cash=cash123;
+		System.out.println("in cnstr of " + getClass().getName() + " " + myTransport+" "+customerNotification+" "+cash);
+	}
+	@Override
+	public void deposit(double amt) {
+		System.out.println("depositing " + amt);
+		byte[] data = ("depositing " + amt).getBytes();
+		myTransport.informBank(data);// dependent obj(ATM) is calling method of dependency(Tranport) : for informing
+										// underlying bank
+		// ATM ---> NoticationService for alerting the customer
+		for (NotificationService service : customerNotification)
+			service.notifyCustomer("Withdraw", amt);
+	}
+
+	@Override
+	public void withdraw(double amt) {
+		System.out.println("withdrawing " + amt);
+		byte[] data = ("withdrawing " + amt).getBytes();
+		myTransport.informBank(data);// dependent obj is calling method of dependency
+		// ATM ---> NoticationService for alerting the customer
+		for (NotificationService service : customerNotification)
+			service.notifyCustomer("Withdraw", amt);
+
+	}
+	// add init n destroy style methods
+	public void init123() {
+		System.out.println("in init " + myTransport+" "+customerNotification+" "+cash);
+	}
+	//add 2 setters for setter based D.I
+	public void setMyTransport(Transport myTransport) {
+		System.out.println("in set transport");
+		this.myTransport = myTransport;
+	}
+
+	public void setCustomerNotification(NotificationService[] customerNotification) {
+		System.out.println("in set cust notification");
+		this.customerNotification = customerNotification;
+	}
+	public void destroy123() {
+		System.out.println("in destroy " + myTransport);
+	}
+
+}
+
+        
+```
+
+
+5.  factory based DI
+
+- 1. xml 
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+	<!-- dependency bean config. -->
+	<!-- singleton n eager -->
+	<bean id="test" class="dependency.TestTransport" />
+	<!-- scope=prototype -->
+	<bean id="http" class="dependency.HttpTransport" scope="prototype" />
+	<!-- singleton n lazy -->
+	<bean id="soap" class="dependency.SoapTransport" lazy-init="true" />
+	<!-- add dependency beans for cust notification -->
+	<bean id="email" class="dependency.EmailNotification" />
+	<bean id="sms" class="dependency.SMSNotification" />
+<!-- dependent bean : atm_bean(id) :singleton n eager , dep : setter based D.I 
+		: soap -->
+	<bean id="atm_bean" class="dependent.ATMImpl" 
+init-method="init123" destroy-method="destroy123" factory-method="myFactory">
+		<!-- constructor based D.I -->
+		<constructor-arg name="cash123" value="456" />
+		<constructor-arg name="t" ref="test" />
+		<constructor-arg name="service" ref="sms" />
+	</bean>
+</beans>
+```
+
+- 2. dependent
+```java
+public class ATMImpl implements ATM {
+	private Transport myTransport;
+	private NotificationService[] customerNotification;
+	private double cash;
+	private ATMImpl(double cash123,Transport t,NotificationService[] service) {
+		cash=cash123;
+		myTransport = t ;
+		customerNotification = service; 
+		System.out.println("in cnstr of " + getClass().getName() + " " + myTransport+" "+customerNotification+" "+cash);
+	}
+	@Override
+	public void deposit(double amt) {}
+	@Override
+	public void withdraw(double amt) {}
+	// add init n destroy style methods
+	public void init123() {
+	System.out.println("in init " + myTransport+" "+customerNotification+" "+cash);
+	}
+	// no  setters required
+	// add a factory method : For demo of Factory based D.I 
+	public static ATMImpl myFactory(double cash123,Transport t,NotificationService[] service) {
+	System.out.println("in factory method ");
+	 // invoke private constr   :to create the bean instance and return it to the caller 
+	return new ATMImpl(cash123, t, service);}
+      public void destroy123() {System.out.println("in destroy " + myTransport);}
+}         
+```
 

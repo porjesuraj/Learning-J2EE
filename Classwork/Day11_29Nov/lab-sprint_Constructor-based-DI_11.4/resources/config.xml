@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+<!-- dependency bean config  -->
+
+<bean id="test" class="dependency.TestTransport" scope="singleton" lazy-init="false"/>
+
+<bean  id="http" class="dependency.HttpTransport" scope="prototype"/>
+
+<bean id="soap" class="dependency.SoapTransport" scope="singleton" lazy-init="true"/>
+<bean id="email" class="dependency.EmailNotification"/>
+<bean id="sms" class="dependency.SMSNotification" />
+
+<!--  dependent bean config  -->
+<bean id="atm_bean" class="dependent.ATMImpl" 
+   init-method="myInit" destroy-method="myDestroy" >
+<!-- for constructor based D.I -->
+<constructor-arg name="t" ref="test" />
+<constructor-arg name="services" ref="sms" />
+</bean> 
+
+
+</beans>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	<!-- dependency bean config. -->
+	<!-- singleton n eager -->
+	<bean id="test" class="dependency.TestTransport" />
+	<!-- scope=prototype -->
+	<bean id="http" class="dependency.HttpTransport" scope="prototype" />
+	<!-- singleton n lazy -->
+	<bean id="soap" class="dependency.SoapTransport" lazy-init="true" />
+	<!-- add dependency beans for cust notification -->
+	<bean id="email" class="dependency.EmailNotification" />
+	<bean id="sms" class="dependency.SMSNotification" />
+
+	<!-- dependent bean : atm_bean(id) :singleton n eager , dep : setter based D.I 
+		: soap -->
+	<bean id="atm_bean" class="dependent.ATMImpl" 
+init-method="init123" destroy-method="destroy123" factory-method="myFactory">
+		<!-- constructor based D.I -->
+		<constructor-arg name="cash123" value="456" />
+		<constructor-arg name="t" ref="test" />
+		<constructor-arg name="service" ref="sms" />
+	</bean>
+</beans>
+
+            
