@@ -3199,6 +3199,8 @@ public class ATMImpl implements ATM {
  ``` 
 
 - 5. hybrid Approach
+
+  +   config file  
  ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns=
@@ -3216,7 +3218,112 @@ public class ATMImpl implements ATM {
  available: expected single matching bean but found 3: test,mtTransport,soap  -->
 
  ``` 
-- 6. 
- ```xml
+  +  dependent class
+ ```java
 
+@Component("my_atm") // to tell SC whatever folows is a spring bean : Which life cycle has to be managed by SC
+public class ATMImpl implements ATM {
+	@Autowired //(required = false) // by default : required = true => mandetory: :
+	// :autowire = byType : tries to match data type of property with data type of dependency bean 
+	@Qualifier("httpTransport") // @AutoWired + Qualifier  = auto wired : by Name 
+	private Transport myTransport;
+	public ATMImpl() {
+	System.out.println("in cnstr of " +getClass().getName()+" "+ myTransport);
+
+	}
+	@Override
+	public void deposit(double amt) {
+	}
+	@Override
+	public void withdraw(double amt) {
+	}
+
+	// init stype method 
+	   @PostConstruct
+		public void myInit() {
+	System.out.println("in my init of " + getClass().getName() + "dependency " + myTransport);
+		}
+		// destory style method
+		
+    @PreDestroy
+	public void myDestroy() {
+		
+	System.out.println("in my destroy of " + getClass().getName() + "dependency " + myTransport);	
+	}	
+}
  ``` 
+  + dependency class
+
+```java
+// singleton and eager 
+@Component("test")
+public class TestTransport implements Transport {
+	public TestTransport() {
+		System.out.println("in cnstr of " +getClass().getName());
+	}
+	@Override
+	public void informBank(byte[] data) {
+		System.out.println("informing bank using " + getClass().getName() + " layer");
+
+	}
+
+}
+--------------------------
+
+@Component
+@Scope(value = "prototype")
+// derived bean id = "httpTransport" 
+public class HttpTransport implements Transport {
+	public HttpTransport() {
+		System.out.println("in cnstr of " +getClass().getName());
+	}
+
+	@Override
+	public void informBank(byte[] data) {
+		System.out.println("informing bank using " + getClass().getName() + " layer");
+
+	}
+
+}
+-------------------------------------------
+// singleton and lazy 
+@Component("soap")
+@Lazy(value = true)
+public class SoapTransport implements Transport {
+	public SoapTransport() {
+		System.out.println("in cnstr of " +getClass().getName());
+	}
+
+	@Override
+	public void informBank(byte[] data) {
+		System.out.println("informing bank using " + getClass().getName() + " layer");
+
+	}
+
+}
+
+```
+
+  + tester 
+```java
+public static void main(String[] args) {
+// start spring container : using xml based metadata instructions , placed in run time classpath 
+// class : o.s.c.s(.context.support).ClassPathXmlApplicationContext(String configFIle) throws BeansException
+try (ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("config.xml")){
+			
+System.out.println("SC started ...");
+// get readymade springbean instance from SC , for invoking B.L
+System.out.println("making first demand");
+ATMImpl atmBean = ctx.getBean("my_atm", ATMImpl.class); 
+// B.L 
+	atmBean.deposit(1000);
+System.out.println("making second demand");
+ATMImpl atmBean2 = ctx.getBean("my_atm", ATMImpl.class);
+System.out.println(atmBean == atmBean2);
+// System.out.println(atmBean..equals(atmBean2));
+} catch (Exception e) {
+		e.printStackTrace();
+		}		
+	}	
+```
+
