@@ -2645,7 +2645,7 @@ Confirm spring bean life cycle (along with scopes, lazy-init,init n destroy meth
 
 
 
-## demo on Dependency Injection  configuration 
+## demo on Dependency Injection  configuration Explicitely - manual wiring 
 
 1. demo on singleton and prototype scope on bean 
 
@@ -3103,3 +3103,120 @@ public class ATMImpl implements ATM {
 }         
 ```
 
+
+
+
+# Day12
+
+## demo on Spring Auto wiring 
+
+1. demo on configuring spring bean implicitely (auto wiring ) 
+
+- 1. Name based  :
+ ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" autowire="byName" /> 
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="mtTransport" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport"/>
+</beans>
+
+ ``` 
+- 2. setter based
+ ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" autowire="byType" /> 
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<!-- <bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="mtTransport" class="dependency.HttpTransport" scope="prototype"/> -->
+<bean id="soap" class="dependency.SoapTransport"/>
+</beans>
+
+ ``` 
+
+- 3. setter based : gives error , due to ambiguity
+ ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" autowire="byType" /> 
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="mtTransport" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport"/>
+</beans>
+<!--NoUniqueBeanDefinitionException: No qualifying bean of type 'dependency.Transport'
+ available: expected single matching bean but found 3: test,mtTransport,soap  -->
+ ``` 
+
+- 4. constructor based
+ ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans>
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" autowire="constructor" /> 
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="mtTransport" class="dependency.HttpTransport" scope="prototype"/>
+<bean id="soap" class="dependency.SoapTransport"/>
+</beans>
+<!--NoUniqueBeanDefinitionException: No qualifying bean of type 'dependency.Transport'
+ available: expected single matching bean but found 3: test,mtTransport,soap  -->
+```
+-  dependent class
+```java
+
+    public class ATMImpl implements ATM {
+	/* private TestTransport myTransport = new TestTransport(); */
+	/* private Transport myTransport = new HttpTransport(); */
+	private Transport[] myTransport;
+	public ATMImpl(Transport[] transports) {
+		
+		myTransport = transports; 
+		System.out.println("in cnstr of " +getClass().getName()+" "+ myTransport);
+		} }
+ ``` 
+
+- 5. hybrid Approach
+ ```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns=
+	xmlns:xsi=
+	xmlns:context=
+	xsi:schemaLocation=>
+
+<!--  Enable class internal annotation support eg autowired /requestMapping/postcCnstruct -->
+<context:annotation-config />
+<!-- To tell SC about the location of base package of the spring beans -->
+<context:component-scan base-package="dependency,dependent"/>
+</beans>
+
+<!--NoUniqueBeanDefinitionException: No qualifying bean of type 'dependency.Transport'
+ available: expected single matching bean but found 3: test,mtTransport,soap  -->
+
+ ``` 
+- 6. 
+ ```xml
+
+ ``` 

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<!--  configure dependent bean  -->
+<!-- default : scope -  singleton : load policy- eager -->
+<!-- scope : prototype :only applicable  load policy : lazy (upon demand) : one per demand-->
+<bean id="my_atm" class="dependent.ATMImpl" scope="singleton" lazy-init="false"
+ init-method="myInit" destroy-method="myDestroy" autowire="byType" /> 
+<!--  configure dependency beans  -->
+<!--  default scope = Singleton  default loading policy for singleton beans  :eager -->
+<!-- <bean id="test" class="dependency.TestTransport" lazy-init="true"/>
+<bean id="mtTransport" class="dependency.HttpTransport" scope="prototype"/> -->
+<bean id="soap" class="dependency.SoapTransport"/>
+</beans>
