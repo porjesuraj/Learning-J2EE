@@ -8,6 +8,10 @@
 </head>
 <body>
 
-<h4> <a href="test"> Welcome to Spring MVC</a> </h4>
+<h4> <a href="test"> Test Spring MVC flow</a> </h4>
+
+<h4> <a href="test2"> Test Spring MVC using ModelAndView for interpolation</a> </h4>
+
+<h4> <a href="test3"> Test Spring MVC using Model for interpolation</a> </h4>
 </body>
 </html>
