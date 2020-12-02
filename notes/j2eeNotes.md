@@ -3103,28 +3103,27 @@ eg : collection of basic type
 
 ## to read
 
-### Why Spring 
-It simplifies Java development. It's one-stop-shop.
-Excellent for integration with existing frameworks.
-Reduces boiler-plate code.
-Allows to build applications using loose coupling achieved via IoC(Inversion of control) & AOP(aspect oriented programming)
+### 1. Why Spring 
+- It simplifies Java development. It's one-stop-shop.
+- Excellent for integration with existing frameworks.
+- Reduces boiler-plate code.
+- Allows to build applications using loose coupling achieved via IoC(Inversion of control) & AOP(aspect oriented programming)
 
-What is it ?
-It is a container + framework.
+2. What is it ?
+- It is a container + framework.
 
-Why Container 
-It manages the life cycle of spring beans (eg : controller,rest controller , dao,service)
+3. Why Container 
+- It manages the life cycle of spring beans (eg : controller,rest controller , dao,service)
 
-Why Framework ?
-It provides readymade implementation of patterns & helps in building enterprise applications.
-
-It is the most popular application development framework for enterprise Java. It is used to create high performant, easily testable, and reusable code.
-
-Spring framework is an open source Java platform. 
-Founder is  Rod Johnson and was first released under the Apache  license in June 2003.
+4. Why Framework ?
+- It provides readymade implementation of patterns & helps in building enterprise applications.
+- It is the most popular application development framework for enterprise Java. 
+- It is used to create high performant, easily testable, and reusable code.
+- Spring framework is an open source Java platform. 
+- Founder is  Rod Johnson and was first released under the Apache  license in June 2003.
 Currently hosted on Pivotal/VMware
 
-Why Spring 
+### 2. Why Spring 
 
 1. Spring is lightweight .The basic version of Spring framework is around 2MB.
 
@@ -3137,158 +3136,132 @@ Why Spring
 
 6. Easy integration with web MVC applications including web sockets 
 (for async communication between server & client)
-Spring's web framework is a  web MVC framework, which is a great alternative to web frameworks such as Struts 
+- Spring's web framework is a  web MVC framework, which is a great alternative to web frameworks such as Struts 
 
-7. It is organized in a modular fashion. Even though it's extensive , you have to worry only about the those modules that you need  and ignore the rest.
+7. It is organized in a modular fashion. Even though it's extensive , you have to worry only about  those modules that you need  and ignore the rest.
 
 8. Spring does not re-invent the wheel, instead it makes use of already existing frameworks like Hibernate , making its integration easier.
 
 9. It translates technology-specific exceptions (thrown by JDBC, Hibernate, or JDO, for example) into consistent, unchecked exceptions.
 
-10. 
-It provides a consistent transaction management interface that can support  a local transaction (using a single database) as well as  global transactions (using JTA over multiple databases).
+10. It provides a consistent transaction management interface that can support  a local transaction (using a single database) as well as  global transactions (using JTA over multiple databases).
 
-Main winning feature of Spring is : loose coupling between the modules.
-
-How does it achieve loose coupling ?
+11. Main winning feature of Spring is : 
+- loose coupling between the modules.
+- How does it achieve loose coupling ?
 1. IoC -- IoC is achieved using Dependency Injection(D.I)
 2. Aspect Oriented Programming(AOP)
 
 
-### Enter Spring
-
-Why Spring ?
-Simplifies overall java development
-
-What is it ?
-container --manages life cycle of spring beans
-(spring bean --- java obj whose life cycle completely managed by SC(spring container)
-eg : rest controller, controller, service,DAO.
-framework --rdy made implementation of std patterns(eg :MVC,Proxy,singleton,factory, ORM ...)
+### 3. Enter Spring
 
 
-Spring is modular n extensive framework.
+1. What is dependency injection ?
+- 1. In JSP---JB---DAO(Utils) -- POJO --DB layers, here
+    - Dependent Objs -- JavaBean , Hibernate based DAO, JDBC Based DAO
+    - Dependencies --- DAO,Utils(SessionFactory) , Utils(DB connection)
+- All of above are examples of tight coupling.
+- 2. Why --
+  - Any time the nature of the dependency changes , dependent obj is affected
+  - i.e u will have to make changes in dependent obj
 
+- 3. Tight coupling --strongly un desirable.
+ - Why -
+ -  difficult to maintain or extend.
+- 4. In above examples , Java bean creates the instance of DAO.
+  - Hibernate based DAO , gets SF from HibUtils.
+  - JDBC based DAO ,gets db connection from DBUtils.
+- i.e dependent objects are managing their dependencies. --
+- it is traditional/conventional programming model.
 
-Why Spring : loosely coupled application
-Via : D.I / AOP
+2. What is D.I ?
+- Dependency injection=wiring=collaboration between dependent & dependency
+- Instead of dependent objs managing their dependencies , 3rd party containers 
+    - eg : Angular / Spring/ EJB
+    - will auto create the dependecies & make it available to dependents, directly @ run time.
+- Since dependent are no longer managing dependencies -
+- its called as IoC ---Inversion of control
 
-
-What is dependency injection ?
-
-
-In JSP---JB---DAO(Utils) -- POJO --DB layers
-Dependent Objs -- JavaBean , Hibernate based DAO, JDBC Based DAO
-Dependencies --- DAO,Utils(SessionFactory) , Utils(DB connection)
-
-All of above are examples of tight coupling.
-Why --Any time the nature of the dependency changes , dependent obj is affected(i.e u will have to make changes in dependent obj)
-
-
-Tight coupling --strongly un desirable.
-Why -- difficult to maintain or extend.
-
-In above examples , Java bean creates the instance of DAO.
-Hibernate based DAO , gets SF from HibUtils.
-JDBC based DAO ,gets db connection from DBUtils.
-
-i.e dependent objects are managing their dependencies. ---traditional/conventional programming model.
-
-What is D.I ?(Dependency injection=wiring=collaboration between dependent & dependency)
-Instead of dependent objs managing their dependencies , 3rd party containers(eg : Angular / Spring/ EJB) will auto create the dependecies & make it available to dependents, directly @ run time.
-
-Since dependent are no longer managing dependencies --its called as IoC ---Inversion of control
-
-Hollywood principle --You don't call us , we will call you....
-SC --- > Dependent objs (i.e SC will create the dependencies for the dependent objs)
-
-eg : UserController
+- 1. Hollywood principle -
+   - You don't call us , we will call you....
+   - SC --- > Dependent objs (i.e SC will create the dependencies for the dependent objs)
+- 2. eg :
+ UserController
+```java 
 @Autowired
 private IUserService service;
 
 In DAO layer
 @AutoWired
 private SessionFactory sf;
+```
+
+- 3. Pre requisite : 
+  - Already added STS plug-in / STS
 
 
-Pre requisite : Already added STS plug-in / STS
-Steps for spring nature to Java SE (core java application)
-Important :  Extract spring api-docs
-0. Change perspective to Java
-1. Create Java project
-2. Create a new User lib --containing spring/hibernate/jdbc drvr/REST.... JARs.(from day11_help/spring-help/spring5-hibernate5-rest-jars)
-DON'T use earlier created hibernate lib.
-
-
-3. Add user lib in build path.(R click --build path --confgure build path)
-3.5 Copy dependent & dependency beans from day11_help/spring-help/rdy code.
-4. Create new src folder --<resources> & create spring bean config xml file.(Using STS support)
-5. Add namespace <beans>
-
-
-More details about <bean> tag 
-Attributes
+- 4. More details about <bean> tag Attributes
 1. id --mandatory --bean unique id
 2. class --- mandatory -- Fully qualified bean class name
 3. scope --- In Java SE --- singleton | prototype
-In web app singleton | prototype | request | session
-Def scope = singleton
-singleton --- SC will share single bean instance for multiple requests/demands
-prototype -- SC creates NEW bean instance per  request/demand.
+- In web app singleton | prototype | request | session
+ -Def scope = singleton
+- singleton --- SC will share single bean instance for multiple requests/demands
+- prototype -- SC creates NEW bean instance per  request/demand.
 
 4. lazy-init --- def value=false.
-Applicable only to singleton beans.
-SC will auto create spring bean instance --- @ SC start up.
+- Applicable only to singleton beans.
+- SC will auto create spring bean instance --- @ SC start up.
 
-5. init-method --name of init style method(public void anyName() throws Exception{..})
-called by SC after setter based D.I
+5. init-method -
+ - name of init style method
+   > public void anyName() throws Exception{..}
+ - called by SC after setter based D.I
 
 6. destroy-method --name of destroy style method
-(public void anyName() throws Exception{..})
-called by SC before GC of spring bean (applicable only to singleton beans)
+> public void anyName() throws Exception{..}
+- called by SC before GC of spring bean (applicable only to singleton beans)
 
 
-API 
-How to get ready to use spring beans from SC ?
-API of BeanFactory
-public <T> T getBean(String beanId,Class<T> beanClass) throws BeansException
-
-Spring bean life cycle
-Types of wiring 
+- 5. API 
+- 1. How to get ready to use spring beans from SC ?
+  - API of BeanFactory
+  > public <T> T getBean(String beanId,Class<T> beanClass) throws BeansException
+  - Spring bean life cycle 
+  - Types of wiring 
 
 
 ### readme_Spring
 
-WHY Spring ? 
-To simplify Java development.
+1. WHY Spring ? 
+- To simplify Java development.
 
-What is spring?
+2. What is spring?
+- Its a container & a framework both.
+- Spring is an open source framework since February 2003. 
+- Created by Rod Johnson.(currently hosted on pivotal/vmware)
 
-Its a container & a framework both.
+- One line answer to what is spring--
+-  spring is not a J2EE specification BUT its created  to make developing complex J2EE applications easier.
+- Why learn one more frmwork --
+-  when u already have EJB,Struts,Hibernate etc....
+- as Spring helps you to 
 
+  1. Build applications from plain old Java objects (POJOs) (known as spring beans ) 
+  2. Apply enterprise services non-invasively.
+- w/o invasion means --
+   -  POJOs DONT implement or extend from spring APIs 
+   -    This capability applies to the Java SE programming model and to full and partial Java EE.
 
-Spring is an open source framework since February 2003. 
-Created by Rod Johnson.(currently hosted on pivotal/vmware)
+  3. Examples of how you, as an application developer, can use the Spring platform advantage:
 
-One line answer to what is spring--- spring is not a J2EE specification BUT its created  to make developing complex J2EE applications easier.
+   -  1. Make a Java method execute in a database transaction without having to deal with transaction APIs.
 
-Why learn one more frmwork --- when u already have EJB,Struts,Hibernate etc....
+   - 2.  Make a local Java method a remote procedure without having to deal with remote APIs.
 
-Spring helps you to 
+   - 3.  Make a local Java method an ORM operation without having to deal with overheads of ORM set up.
 
-1.Build applications from plain old Java objects (POJOs) (known as spring beans ) 
-2. Apply enterprise services non-invasively.
-(w/o invasion means --- POJOs DONT implement or extend from spring APIs)   This capability applies to the Java SE programming model and to full and partial Java EE.
-
-Examples of how you, as an application developer, can use the Spring platform advantage:
-
-    Make a Java method execute in a database transaction without having to deal with transaction APIs.
-
-    Make a local Java method a remote procedure without having to deal with remote APIs.
-
-    Make a local Java method an ORM operation without having to deal with overheads of ORM set up.
-
- Make a local Java method a web service end point , without having to deal with JAX WS or JAX RS setups.
+   - 4. Make a local Java method a web service end point , without having to deal with JAX WS or JAX RS setups.
 
 Simple answer to WHY Spring
 
@@ -3297,166 +3270,654 @@ Spring simplifies Java development.
 Since above is a bold stmt -- to justify it --- there are main 4 reasons
 
 Reasons ---it applies 4 key strategies
-1. lightweight & min intrusive(POJOs not tied to spring)   development with POJOs
+  1. lightweight & min intrusive(POJOs not tied to spring)   development with POJOs
 
-2. Loose coupling thro' DI/IoC & with usage of i/f
+  2. Loose coupling thro' DI/IoC & with usage of i/f
 
-3.Declarative prog(XML or anno or java config)  + thro' Aspects & common conventions
+  3. Declarative prog(XML or anno or java config)  + thro' Aspects & common conventions
 
-4. Boilerplate code reduction thro aspects & templates.
-
-
-7. Def. of Spring ----
-Spring is a lightweight , dependency injection and aspect-oriented container and framework. works on Ioc(Inversion of control)
-
-Meaning 
-
-7.1 Lightweight Lesser no of JARs
-JavaBeans / POJOs in Spring-enabled application often have no dependencies on Spring-specific classes.
-7.2  Dependency Injection Spring  allows loose coupling through dependency injection (DI). 
-
-DI =instead of an object looking up dependencies from a container(in EJB from EJB container or in RMI from RMIRegistry) or creating its own dependency(in Fixed JDBC , conn = DM.getCn(....)) , the container gives the dependencies to the object at instantiation without waiting to be asked.
+  4. Boilerplate code reduction thro aspects & templates.
 
 
-You can think of D.I as  JNDI(Java naming & directory iterface -- Naming service)  in reverse.
+3. Definition. of Spring  ?
+- Spring is a lightweight , 
+- dependency injection and
+-  aspect-oriented container and framework.
+-  works on Ioc(Inversion of control)
 
-7.3  Aspect-oriented Spring supports aspect-oriented programming(AOP)
+ - 1. Lightweight Lesser no of JARs
+   - JavaBeans / POJOs in Spring-enabled application often have no dependencies on Spring-specific classes.
+ - 2.   Dependency Injection Spring  allows loose coupling through dependency injection (DI). 
+  - DI =instead of an object looking up dependencies from a container(
+  - in EJB from EJB container or in RMI from RMIRegistry) 
+  - or creating its own dependency(in Fixed JDBC , conn = DM.getCn(....)) ,
+ -  the container gives the dependencies to the object at instantiation without waiting to be asked.
 
-(AOP) allows  separating application business logic from system services (such as auditing and transaction management,logging , security,transactions).
-Application objects perform only business logic and nothing more. 
+ - You can think of D.I as  
+ > JNDI(Java naming & directory iterface -- Naming service)  in reverse.
 
-They are not responsible for (or even aware of) other system concerns, such as eg : logging , transactions, or security
-
-
-
-
-7.4
-Why Spring is a Container ?
-
-Spring is a container which manages
-the lifecycle and configuration of application objects.(spring beans)
-In Spring, using config XMLs or annotations or java config,  you can
-declare - how to create  each of your application objects(spring beans)
-           - how to configure them            
-           - how they should be associated with each other.(collaboration/wiring/coupling=connecting dependencies with dependent objs)
-
-7.5  Why Spring is a framework ?
-
-Spring allows you  to configure and compose complex applications from simpler components. In Spring, application objects are composed declaratively, typically in an XML file or using annotations
-
-Spring also provides you with ready made implemetations of services like - transaction management, persistence framework,web mvc etc.
-
-
-Spring is unique, for several reasons:
-
-1. It helps you in  important areas that many other popular frameworks don't.  eg : readymade Hibernate templates.
-
-2. Provides  a way to manage your business objects - based on Dependeny injection(DI)
-
-3.Spring is both comprehensive and modular.
-Offers you lot many features, yet gives you choice to integrate layers one by one, test it & then add new features via new layers.
-
-4  Spring is an ideal framework for test driven projects.
-    
-5. It  is basically  a one-stop shop, addressing most of the concerns of typical enterprise  applications. 
-
-6.Using Spring one can  centrally describe collaborating objects. From the earliest versions of Spring, there was an XML file that was used to describe the object graph.  
-Contents of XML ---- Consists of beans. Each bean element describes an object that will be created and given an id. Each property element describes a setter method on the object and the value that should be given to it. These setters are called for you by the Spring application container.
+ - 3.   Aspect-oriented Spring supports aspect-oriented programming(AOP)
+  - (AOP) allows  separating application business logic from system services 
+  - such as auditing and transaction management,logging , security,transactions.
+  - Application objects perform only business logic and nothing more. 
+  - They are not responsible for (or even aware of) other system concerns, such as eg : logging , transactions, or security
 
 
 
-What is Spring ? 
 
-1. An open source framework since February 2003. 
-Created by Rod Johnson and described in his book Expert One-on-One: J2EE Design and Development.
+4. Why Spring is a Container ?
+- Spring is a container which manages
+  - 1. the lifecycle and configuration of application objects(spring beans)
+  - In Spring, using config XMLs or annotations or java config,  you can declare 
+  - how to create  each of your application objects(spring beans)
+          - how to configure them            
+          - how they should be associated with each other.
+            - i.e collaboration/wiring/coupling=connecting dependencies with dependent objs
 
-Allows us to give capability of EJBs to  plain JavaBeans without using an application server.
+5.   Why Spring is a framework ?
+- Spring allows you  to configure and compose complex applications from simpler components. - In Spring, application objects are composed declaratively, typically in an XML file or using annotations
+- Spring also provides you with ready made implemetations of services like 
+   -  transaction management, persistence framework,web mvc etc.
+  
+6. Spring is unique, for several reasons:? 
 
-Any Java SE application can also use Spring to get simplicity, testability, and loose coupling.
+- 1. It helps you in  important areas that many other popular frameworks don't. 
+ -  eg : readymade Hibernate templates.
 
-2.Spring has been hosted on SourceForge. 
+- 2. Provides  a way to manage your business objects - based on Dependeny injection(DI)
 
+- 3. Spring is both comprehensive and modular.
+   - Offers you lot many features, yet gives you choice to 
+      - integrate layers one by one, 
+      - test it & then add new features via new layers.
 
-3. Spring is a lightweight framework.  Most of your Java classes will have  no dependency on Spring.   This means that you can easily transition your application from the Spring framework to any other frmwork. (Framework independence)
+- 4.  Spring is an ideal framework for test driven projects.
+- 5. It  is basically  a one-stop shop, addressing most of the concerns of typical enterprise  applications. 
 
-4. All Java applications that consist of multiple classes have inter-dependencies or coupling between classes.  Spring helps us develop applications that minimize the negative effects of coupling and encourages the use of interfaces in application development.  
-
-5. Using interfaces in our applications to specify type helps make our applications easier to maintain and enhance later.
-
-6. The Spring framework helps developers for separation of responsibilities. 
-
-eg scenario -- 
-Think of a situation   Your manager tells you  to do your normal development work(eg - write stock trading appln) +  write down everything you do and how long it takes you. 
-
-A better situation would be you do your normal work, but another person observes what you re doing and records it and measures how long it took. 
-
-
-Even better would be if you were totally unaware of that other person and that other person was able to also observe and record , not just yours but any other people s work and time.  
-
-That s separation of responsibilities.   --- This is what spring offers u thro AOP
-
-8 Spring framework Modules
-
-
-9. Advantages of ApplicationContext over BeanFactory
-9.1Application contexts resolve text messages, including support for internationalization (I18N).
-9.2 Application contexts provide a generic way to load file resources, such as images.
-9.3Application contexts can publish events to beans that are registered as listeners.
+- 6. Using Spring one can  centrally describe collaborating objects.
+   -  From the earliest versions of Spring, there was an XML file that was used to describe the object graph.  
+   - Contents of XML ---
+   - Consists of beans. 
+   - Each bean element describes an object that will be created and given an id.
+   -  Each property element describes a setter method on the object and the value that should be given to it.
+   -   These setters are called for you by the Spring application container.
 
 
-IOC -- rather a generic term 
-Inversion of Control (IoC) is an object-oriented programming practice where the object coupling(dependent obj bound with dependency)  is bound at run time by an assembler object(eg spring container) and is typically not known at compile time using static analysis.
 
-Unlike in traditional prog -- where dependent obj creates dependencies leading to tight coupling , container sets the dependencies (not US --not a prog or not a dependent obj) ---so its inversion of control
+7. What is Spring ? 
 
-Dependency. injection=Ioc+dependency inversion
-Why IoC or Dependency Injection (advantages of IoC)
+ - 1. An open source framework since February 2003. 
+   -  Created by Rod Johnson and described in 
+   -  his book Expert One-on-One: J2EE Design and Development.
+ - Allows us to give capability of EJBs to  plain JavaBeans without using an application server.
+ - Any Java SE application can also use Spring to get simplicity, testability, and loose coupling.
 
+ - 2. Spring has been hosted on SourceForge. 
+ - 3. Spring is a lightweight framework.  
+    - Most of your Java classes will have  no dependency on Spring.
+    -    This means that you can easily transition your application from the Spring framework to any other frmwork. (Framework independence)
+
+ - 4. All Java applications that consist of multiple classes have inter-dependencies or coupling between classes. 
+ -  Spring helps us develop applications that minimize the negative effects of coupling and encourages the use of interfaces in application development.  
+
+- 5. Using interfaces in our applications to specify type helps make our applications easier to maintain and enhance later.
+
+- 6. The Spring framework helps developers for separation of responsibilities. 
+
+- 7. eg scenario --
+ 
+   1. Think of a situation   Your manager tells you  to do your normal development work(eg - write stock trading appln) +  write down everything you do and how long it takes you. 
+
+   2. A better situation would be you do your normal work, but another person observes what you re doing and records it and measures how long it took. 
+
+   3. Even better would be if you were totally unaware of that other person and that other person was able to also observe and record , not just yours but any other people s work and time.  
+
+   4. That s separation of responsibilities.   --- This is what spring offers u thro AOP
+
+8.  Spring framework Modules
+-
+1. Advantages of ApplicationContext over BeanFactory
+- 1. Application contexts resolve text messages, including support for internationalization (I18N).
+- 2.  Application contexts provide a generic way to load file resources, such as images.
+- 3. Application contexts can publish events to beans that are registered as listeners.
+
+2. IOC -- 
+- rather a generic term 
+- 1. Inversion of Control (IoC) is an object-oriented programming practice where
+  -  the object coupling(dependent obj bound with dependency)  is bound at run time by an assembler object
+  -  eg spring container
+  -   and is typically not known at compile time using static analysis.
+
+- Unlike in traditional prog -- where dependent obj creates dependencies leading to tight coupling , 
+- container sets the dependencies (not US --not a prog or not a dependent obj) ---so its inversion of control
+
+3. Dependency injection = Ioc + dependency inversion
+- 1. Why IoC or Dependency Injection (advantages of IoC)
     * There is a decoupling of the execution of a certain task from implementation.
     * Every module can focus on what it is designed for.
     * Modules make no assumptions about what other systems do but rely on their contracts/specs (=i/f)
     * Replacing modules has no side effect on other modules.
+- Inversion of Control is sometimes  referred to as the "Hollywood Principle: Don't call us, we'll call you", 
 
-Inversion of Control is sometimes  referred to as the "Hollywood Principle: Don't call us, we'll call you", 
+- 2. Dependency injection (DI) is the ability to inject dependencies.
+   -  DI can help make your code architecturally pure.
+   -   It aids in using a design by interface approach as well as test driven development by providing a consistent way to inject dependencies.
+   -    For example a data access object (DAO) may need a database connection. 
+   -    Thus the DAO depends on the database connection. 
+   -    Instead of looking up the database connection with JNDI, you could inject it.
+   -     or another eg is JMS -- conn factory or destination
 
+- 2. One way to think about a DI container like Spring is to 
+- think of JNDI turned inside out.
+-  Instead of the objects looking up other objects that it needs to get its job done (dependencies),   with DI the container injects those dependent objects. 
+-  This is the so-called Hollywood principle, 
+      -   you don't call us (lookup objects), we will call you (inject objects).
 
-Dependency injection (DI) is the ability to inject dependencies. DI can help make your code architecturally pure. It aids in using a design by interface approach as well as test driven development by providing a consistent way to inject dependencies. For example a data access object (DAO) may need a database connection. Thus the DAO depends on the database connection. Instead of looking up the database connection with JNDI, you could inject it. or another eg is JMS -- conn factory or destination
+4. More on ApplicationContext
+- 1. The instantiation of the ApplicationContext creates the container that consists of the objects defined in that XML file.
+- 2. The purpose of this XML file is to create the  beans and their relationship.
+  - This XML file is then provided to the ApplicationContext instance, which creates a container with these beans and their object graphs along with relationships.
+  -  The Spring container is simply a holder of the bean instances that were created from the XML file.
+- 3. An API (getBean) is provided to query these beans and use them accordingly from our client application.
 
-One way to think about a DI container like Spring is to think of JNDI turned inside out. Instead of the objects looking up other objects that it needs to get its job done (dependencies), with DI the container injects those dependent objects. This is the so-called Hollywood principle, you don't call us (lookup objects), we will call you (inject objects).
+5. More on Ioc
+- IoC is also known as dependency injection (DI).
+- 1. It is a process whereby objects define their dependencies,
+  - that is, the other objects they work with, only through constructor arguments, arguments to a factory method, or properties that are set on the object instance after it is constructed or returned from a factory method. 
+  - The container then injects those dependencies when it creates the bean. 
 
-More on ApplicationContext
+- 2. This process is fundamentally the inverse,( hence the name Inversion of Control (IoC)),
+-  of the bean itself controlling the instantiation or location of its dependencies by using direct construction of classes, or a mechanism such as the Service Locator pattern.
 
-The instantiation of the ApplicationContext creates the container that consists of the objects defined in that XML file.
-The purpose of this XML file is to create the  beans and their relationship.
-This XML file is then provided to the ApplicationContext instance, which creates a container with these beans and their object graphs along with relationships. The Spring container is simply a holder of the bean instances that were created from the XML file.
-An API (getBean) is provided to query these beans and use them accordingly from our client application.
-
-More on Ioc
-
-IoC is also known as dependency injection (DI).
-
- It is a process whereby objects define their dependencies,that is, the other objects they work with, only through constructor arguments, arguments to a factory method, or properties that are set on the object instance after it is constructed or returned from a factory method. 
-
-The container then injects those dependencies when it creates the bean. 
-
-This process is fundamentally the inverse,( hence the name Inversion of Control (IoC)), of the bean itself controlling the instantiation or location of its dependencies by using direct construction of classes, or a mechanism such as the Service Locator pattern.
-
-The org.springframework.beans and org.springframework.context packages are the
-basis for Spring Framework's IoC container. The BeanFactory interface provides an advanced
-configuration mechanism capable of managing any type of object. ApplicationContext is a
-sub-interface of BeanFactory. It adds easier integration with Spring's AOP features; message resource handling (for use in internationalization), event publication; and application-layer specific contexts such as the WebApplicationContext for use in web applications.
+- 3. The org.springframework.beans and org.springframework.context packages are the
+basis for Spring Framework's IoC container. 
+ - The BeanFactory interface provides an advanced configuration mechanism capable of managing any type of object. 
+ -  ApplicationContext is as sub-interface of BeanFactory.
+   -   It adds easier integration with Spring's AOP features;
+   -    message resource handling (for use in internationalization),
+   -     event publication
+   -      and application-layer specific contexts such as the WebApplicationContext for use in web applications.
 
 ### 
 
 # day12 
 
-## revision 
+# to read
 
-##
+## Revise
+1. Why Spring 
+- Simplifies Java prog
+- Reduces boiler plate code
+- ready made imple of std pattern(MVC,Proxy,singleton,factory,ORM...)
+- Integration master
+- Loose coupling between dependents n dependencies
+
+2. What is it ?
++ Container
++ Manages life cycle of spring beans
++ Framework
++ Extensive n modular imple of patterns
+
+
+3. What is IoC? :
++  Inversion of control
+
+
+- 1. Conventional prog : Dependent objs managing (creating) dependencies
+   - eg : Java Bean --- DAO , In JB 's constr : DAO instance
+- Nature of dependency changes : dependent obj gets affected
+- so use Inversion of control
+   - Instead of dependent objs managing their dependencies :
+   - 3rd party like Spring container manages the same
+
+1.  D.I : Dependency injection 
+  - to ensure => loose coupling
+- Easier maintence n debugging, easy extensibility.
+
+5. Spring bean life cycle
+!['spring-bean-life-cycle'](spring-bean-life)
+
+
+## Today's Topcis
+- Auto wiring
+- Annotations based programming
+- MVC
+
+
+### 1. Types of wiring  
+
+!['spring-wiring'](day12.8_spring wiring.png)
+
+1. Automatic wiring
+- wiring = injecting dependecies into dependent objects
+- auto wiring means ---
+  - bean definition in xml need not contain property tag or construcutor arg tag. 
+  - This can be resolved auto by container.
+
+2. Types of auto wiring 
+ - 1. autowire="byName"---
+   - SC tries to match bean property by name. 
+   - In dependent bean class , u must have matching setter & 
+   - in xml config file -- MUST have bean id with the matched name.
+
+ - 2. auto-wired="byType" --
+   - SC tries match bean property by type of the property --
+   -  if it comes across multiple beans of the same type ---> NoUniqueBean exception is raised.
+   - eg --- In dependent --- ATMImpl
+      - private Transport myTransport;---- setter
+      - Transport imple --- test,soap,http
+      - auto-wired=constructor --- 
+      - paramed constr  --- byName --- constr arg name MUST match with dependency bean id ---
+          - -if not found --- byType---
+
+3. Hybrid approach
+- (Reduced xml, reduced java code + majority annotations)
+- 1. Steps in Spring programming using annotations
+1. To enable annotation support -- add context namespace & add the following
+<context:annotation-config/> --
+- To tell SC --to enable annotation support
+-  eg --- AutoWired,PostConstruct,Predestroy,.....
+
+2. + How to specify location(base pkg) of spring beans to SC?
+   > <context:component-scan base-package="comma sep list of pkgs"/>
+   - SC starts searching(scanning)  in specified pkgs (including sub-pkgs) --
+   - for classes anno with stereotype anno --
+     -  @Component,@Service,@Repository,@Controller,@RestController
+
+3.  Basic class level annotations meant for  SC
+- Super type 
+   - @Component --- spring bean class
+- sub - type annotations
+   - 1. @Controller --- In Web MVC scenario -- for request handling.
+   - 2. @Service --- Service layer (B.L) + transaction management
+   - 3. @Repository --- DAO layer
+   - 4. @RestController -- RESTful service provider
+
+### 2. Annotation based progamming 
+
+1. @Component ---> <bean id , class> ---> SC interprets it & starts bean life-cycle.
+eg ---
+```java 
+@Component("abc")
+public class MyBean {...}
+xml --- <bean id="abc" class="beans.MyBean"/>
+OR
+@Component
+public class MyBean {...}
+xml --- <bean id="myBean" class="beans.MyBean"/>
+```
+2. @Controller -
+- spring web mvc controller
+3. @Repository --
+- DAO layer class
+4. @Service --
+- for service layer beans --- transactions.
+5. @Scope(value="singleton|prototype|request|session")--
+- class level annotaion --- in xml via scope atribute.
+6. @Lazy(true|false) ---
+- class level anno -- lazy-init attribute
+7. @PostConstruct --
+- method level anno - init-method ---method level
+8. @PreDestroy --
+- method level anno-- destroy-method --- method level
+9. @Required(true|false) --
+- setter method or paramed constr or field level ---tells SC if depenency is mandatory or optional-- def=true
+10. @AutoWired --
+- setter method or paramed constr or field level 
+- eg --- TestTransport implements Transport {...}
+ - auto-wired="byType"
+- eg  -- field level annotation --
+- in ATMImpl bean (dependent)
+```java
+@AutoWired //autowire=byType , mandatory by default (required=true)
+private Transport myTransport;
+```
+- Meaning -
+  - no parameterised constr, no setter , no xml containing bean definition is required.
+  - SC --- chks for any bean of Transport by type & injects it in ATMImpl
+- What if : SC comes across multiple matches :
+>  SC throws NoUniqueBeanDefinitionException
+- What if : SC doesn't find even a single match :
+>  SC throws UnSatisfiedDependencyException
+
+```java
+ @AutoWired
+@Qualifier("test")
+private Transport myTransport; ---- auto-wired="byName"
+---spring supplied anno.
+
+
+OR
+@Resource(name="advSpellChecker")
+private SpellChecker checker; ---- auto-wired="byName"
+--J2EE supplied via javax.annotation
+```
+
+5. SpEL --
+- spring expression language
+- dynamic expression language --
+- spring(3.x) supplied -- to evaluate expressions dynamically.
+- {SpEL expression} --->  similar to  JSP EL 
+- SpEL allows ---> getters,setters,constr invocation, static & non-static method invocations.
+
+### 3.  What is MVC ?
+1.  Model-View-Controller -
+- Standard design pattern , meant for separation of concerns(
+  i.e tasks = responsibilities
+
+2. Model 
+- Java Bean (conversational state holder + B.L supplier)
+3. View layer  
+- JSP , Thymeleaf/velocity/Angular
+- Represents UI / presentation logic  (processing requests & generating response)
+
+4. Controller 
+- Typically a servlet(used in Spring MVC ) or a filter(used in Struts 2 framework)
+- Manages navigation & beans.
+
+5. Front Controller -
+- A design pattern -->  which ensures ANY request coming from ANY client , for this web app , will be intercepted by a common gate keeper(or a centralized dispatcher)
+- It will dispatch clnt request to further components , based upon nature of the req.
+
+6. MVC flow (without spring)
+
+!['mvc-flow'](day12.7spring-MVC-Flow.png)
+ 
+7. Before entering spring-mvc 
+- For  comparison of layers between JSP--JB--DAO --POJO --DB Vs Spring MVC layers.
+refer : comparioson of layers JSP-JB vs Spring MVC.png
+!['jsp-jb-vs-spring-mvc'](day12.2_comparioson%20of%20layers%20JSP-JB%20vs%20Spring%20MVC.png)
 
 
 
+###  Spring Attributes
+
+1. What is a model attribute?
+- It's the attribute(server side entry=k n value pair) 
+- Purpose : to store the results of Business.Logic (B.L)
+- Who creates  --->  Controller
+- Who sends it to whom : Controller ---> Dispatcher.Servlet(D.S)
+- After D.S gets actual view name from View.Resolver(V.S) : 
+- D.S checks : are there any model attrs : if
+   -  Yes : D.S saves model attrs under Request scope & then forwards the clnt to view layer .
+   - NO : D.S forwards the clnt to view layer .
+- 1. How to access these model attrs from JSP ?
+> ${requestScope.attrName}
+
+2. What are different ways for Controller to add model attrs ?
+-
+ 1. Via  is o.s.w.s.ModelAndView?
+     - o.s.w.s.ModelAndView : class
+     -  => holder for model attrs + logical view name
+   > ModelAndView(String viewName,String modelAttrName,Object modelAttrVal)
+- . what can be valid return type of req handling method 
+  - String  OR ModelAndView 
+  - Ans.  ModelAndView 
+
+
+ 2. Simpler way : Model
+  - Use  o.s.ui.Model : i/f --
+  - holder (Map) of model attributes
+- 1.  How do u add model attributes ?
+  - > public Model addAttribute(String modelAttrName,Object modelAttrVal)
+- 3.  How to add 2 model attrs?
+   > map.addattr(...).addattr(...);
+- 4. Who will supply empty Model map ?  
+   -  SC by  IoC : DI
+- 5. How to tell SC that u need a model map ? :
+  -  add it as the arg of req handling method
+  - When controller returns string : 
+  - logical view name (controller impl. rets all model map)
 
 
 
+3. How to hide index.jsp under WEB-INF (i.e how to ensure that index page is served to client via D.S)
+- Add HomeController to serve index.jsp
 
+
+4. Handling request parameters in Controller ?
+- eg : >  @RequestParam("price") double productPrice
+- SC converts it to: 
+ > double productPrice =Double.parseDouble(request.getParameter("price"))
+- Reco : Match req param names with method arg names.
+- 1. URL : > http://localhost:8080/day13.1/test/product?nm=pen&qty=10&price=40.5&manuDate=2020-1-1
+- SC : def date time format : mon/day/year
+- Problem : HTTP 400 : Bad request => some request data coming from client is invalid
+Def dat format : mon/day/yr
+- How to tell SC : about exact Date time format : annotation.
+- Default date format used by SC : MM/dd/yyyy
+- In order to change it use : @DateTimeFormat annotation.
+
++ eg : 
+```java
+@RequestParam("exp_date") @DateTimeFormat(pattern="yyyy-MM-dd")  Date expDate
+SC invokes : SimpleDateFormat sdf=new SDF("yyyy-MM-dd");
+Date expDate=sdf.parse(request.getParameter("exp_date"));
+```
+
+- @RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date creation_date
+- for SC : it converts  to 
+    >SDF sdf=new SDF("yyyy-MM-dd");
+    >  SC : Date creation_date=sdf.parse(request.getParameter("creation_date"));
+
+5. What's the meaning of HTTP status 400 :
+-  Bad Client Error
+- Typically it represents some request parameter conversion error.
+
+# dAY 13 
+
+## Today's Topics
+1. Spring MVC n Hibernate integration
+
+### Revise
+
+1. Spring MVC is a web framework based on the model–view–controller pattern.
+-  It is based on the Spring framework and supports a wide range of server-side rendering technologies
+- (view layer technology)  as JSP, Thymeleaf, Groovy etc.
+
+2. Dispatcher Servlet
+- It is a front controller that coordinates all the request handling activities. 
+-  Delegates to the HandlerMapping & request handling controllers.
+-   It is automatically created and configured by Spring Boot. 
+-   If you are not using Spring Boot, you need to configure it in web.xml or using java configuration class.
+
+3. Controller
+- Annotate controllers with @Controller and annotate methods in the controller with @RequestMapping or @GetMapping/@PostMapping ..
+-   to tell Spring what method to execute when processing a particular HTTP GET/POST request. 
+-   Controllers typically return a logical view name as String.
+Or they can also return ModelAndView
+
+
+4. What is a model attribute?
+- 1.  server side object(entry=key & value pair) created by Controller(P)
+  - Purpose : To share results between controller n view layer
+  - Who creates  it ?--
+        - created by Controller(P)
+  - Who sends it to whom :
+        -  Controller ---> D.S
+  - What will D.S do with model attrbutes ? :
+        -  pushes(stores) these model attrs under request scope
+- 2. Spring MVC : Push MVC Architecture : Front controller (D.S) is pushing the results in to view layer.
+  - What's the ONLY scope of model attributes ? 
+        -   request
+  - How to access these model attrs from JSP ? 
+  -  > ${requestScope.modelAttrName}
+
+- 3. What are different ways for Controller to add model attrs ?
+     - 1. o.s.w.s.ModelAndView class
+     - 2. o.s.ui.Model i/f
+
+- 4.    What is o.s.w.s.ModelAndView :
+     -  class => Holder of model attrs + logical view name
+-  Constr ? 
+> ModelAndView(String viewName, String attrName,Object attrValue)
+- eg : what can be valid ret type of req handling method , seen currently ?
+   - ModelAndView
+
+
+- 5. Any simpler way to send model attributes to D.S ?
+  - Use  ? o.s.ui.Model : i/f : 
+  - holder (map) of model attrs
+  - Implicit generic Type of Model Map -- <String,Object>
+
+  - 1. How do u add model attributes ?
+    > public Model addAttribute(nm,value)
+
+   - 2.  How to add multiple  model attrs?
+    - method chaining is supported.
+
+   - 3. Who will create  empty Model map ?
+     -   : SC
+
+   - 4. How to tell SC that u need a model map ? : 
+     - Using D.I (IoC)
+    - Simply add Model as the arg in your req handling method.
+
+
+    - 4. When request handling controller(eg : TestController)  rets string : logical view name , what will it implicitly return ?
+Explictily : logical view name
+Implicltly : model attrs 
+
+- 6. How to hide index.jsp under WEB-INF?
+-  (i.e how to ensure that index page is served to client via D.S)
+- add index page in WEB-INF
+
+
+### Handling request parameters in Controller 
+
+> URL : http://localhost:7070/day13_lab/product/add?name=pen&category=stationary&price=50.5&qty=3&creation_date=12/23/2019
+
+
+> URL : http://localhost:7070/day13_lab/product/add?name=pen&category=stationary&price=50.5&qty=3&creation_date=2019-12-23
+
+- Use annotation : 
++ @RequestParam on request handling method argument.
+
+1. :
+>  @RequestParam("price") double productPrice
+   - SC invokes :
+   >  double productPrice=Double.parseDouble(request.getParameter("price"));
+
+2.  
+   >@RequestParam double price
+  - SC invokes :
+  - >  double price=Double.parseDouble(request.getParameter("price"));
+
+#### Recommendation : Match req param names with method arg names.
+
+3. 
+- 1. SC : def date time format : mon/day/year
+   - What will happen if you supply  different date time format ?
+   - Problem : HTTP 400 : Bad request => some request data coming from client is invalid
+Def. dat formate : mon/day/yr
+- 2. How to tell SC : about exact Date time format : 
+  - use annotation.
+eg : 	
+```java
+@RequestParam(name="category") String category123,@RequestParam double price,
+			@RequestParam int qty,@RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date creation_date,Model modelMap)
+
+@RequestParam(name="category") String category123
+SC invokes :String category123=request.getParameter("category")
+
+@RequestParam double price
+double price=Double.parseDouble(request.getParameter("price"))
+
+@RequestParam @DateTimeFormat(pattern="yyyy-MM-dd") Date creation_date
+SDF sdf=new SDF("yyyy-MM-dd");
+Date creation_date=sdf.parse(request.getParameter("creation_date"));
+```
+
+	
+
+### Integration of Spring MVC n Hibernate
+
+1. Comparison of layers between JSP-JB-DAO-POJO-DB Vs Spring MVC layers.
+!['com'](day12.2_comparioson%20of%20layers%20JSP-JB%20vs%20Spring%20MVC.png)
+
+2. PRG pattern(**Post-redirect-get pattern**)
+- to avoid multiple submission issue in a web app.
+- Replace forward view(server pull i.e default) 
+- by redirect view (clnt pull) --
+- a.k.a double submit guard.
+
+3. How to replace default forward view by redirect view in spring MVC ?
++ Ans -->  use redirect keyword.
+- eg :
+>  return "redirect:/vendor/details";
+- for thisD.S invokes
+>  response.sendRedirect(response.encodeRedirectURL("/vendor/details"));
+- Next request from clnt --- ..../vendor/details
+
+
+4. How to remember user details till logout?
++ Ans : add them in session scope.
+- 1. How to access HttpSession in Spring?
+  - Using D.I
+- 2. How  -
+  - Simply add HttpSession as method argument of request handling method.
+
+
+5. How to remember the details(attributes) till the next request (typically required in PRG --redirect view)
+ + Ans -->  Add the attributes under flash scope.
+ - (They will be visible till the next request from the same clnt)
+- 1. How to add ?
+  - Use i/f -- o.s.w.s.mvc.support.RedirectAttributes Method
+  > public RedirectAttributes addFlashAttribute(String attrName,Object value)
+
+- 2. How to access them in view layer in the next request?
+  - via request scope attributes.
+
+- 3. eg : In case of successful login -
+- save user details under session scope(till user log out) & retain status mesg only till the next request.
+ - In case of invalid login -
+ - save status under request scope.
+
+
+6. How to take care of links(href)/form actions + add URL rewriting support ?
+- 1. Import spring supplied JSP tag lib.(via taglib directive) 
+- prefix ="spring"
+
+- 2.  Use the tag.
+ > <a href="<spring:url value='/user/logout'/>">Log Out</a>
+ - where '/'  root of current web app.
+
+
+7. What will be the URL if cookies are enabled ?
+> http://host:port/spring_mvc/user/logout
+
+8. What will be the URL if cookies are disabled ?
+> http://host:port/spring_mvc/user/logout;jsessionid=egD5462754
+
+9. OR form action example
+> eg : <form action="<spring:url value='/admin/list'/>"> .....</form>
+
+10.  From Logout , ending session two option
+- 1. Discard session
+- 2. Forward the client to logout.jsp
+
+11. How to auto navigate the clnt to home page after logging out after some dly ?
+- Ans : By setting refresh header of HTTP response.
+    - API of HttpServletResponse
+   > public void setHeader(String name,String value)
+   - 1. name ---> refresh
+   - 2. value --->  10;
+   - 3. url=home page url (root of web app)
+
+12. How to get the root of current web app ?
+- API of HttpServletRequest
+> String getContextPath()
+
+13. What will hapeen if any controller returns redirect view name to D.S ?
+- 
+1. > eg : UserController -- return "redirect:/admin/list"
+2. D.S skips the V.R & sends temp redirect response to the clnt browser.
+3. How ?
+- D.S invokes ---> 
+>  response.sendRedirec(response.encodeRedirectURL(".../admin/list");
+- So client browser will send a next request ---with method=get
+- URL --
+> http://host:port/spring_mvc/admin/list
+
+
+# Day 14 

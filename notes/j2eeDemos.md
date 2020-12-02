@@ -3112,7 +3112,7 @@ public class ATMImpl implements ATM {
 
 1. demo on configuring spring bean implicitely (auto wiring ) 
 
-- 1. Name based  :
+- 1. auto wiring by name (setter based D.I)
  ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
@@ -3130,6 +3130,7 @@ public class ATMImpl implements ATM {
 
  ``` 
 - 2. setter based
+-  auto wiring by type : setter based D.I (un comment from xml other bean tags n understand exception)
  ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
@@ -3147,7 +3148,8 @@ public class ATMImpl implements ATM {
 
  ``` 
 
-- 3. setter based : gives error , due to ambiguity
+- 3. setter based :
+-  auto wiring by type : setter based D.I (array injected)
  ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
@@ -3167,6 +3169,7 @@ public class ATMImpl implements ATM {
  ``` 
 
 - 4. constructor based
+- auto wiring using constructor (constr based D.I)
  ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <beans>
@@ -3199,6 +3202,8 @@ public class ATMImpl implements ATM {
  ``` 
 
 - 5. hybrid Approach
+- ybrid approach --reduced xml n majority of annotations
+
 
   +   config file  
  ```xml
@@ -3326,4 +3331,366 @@ System.out.println(atmBean == atmBean2);
 		}		
 	}	
 ```
+
+
+## demo on Spring MVC :Create spring MVC based web application from scratch
+
+0. create user library for srpring files
+- add to deployment path : /WED-INF/spring
+- add to libraries 
+1. config file 
+-  servlet deployment tags to configure Dep.Serv : FC for spring MVC
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
+  <display-name>Lab12.6_spring-mvc</display-name>
+  <welcome-file-list>
+    <welcome-file>index.jsp</welcome-file>
+   
+  </welcome-file-list>
+  
+  <!-- servlet deployment tags to configure Dep.Serv : FC for spring MVC-->
+  
+  <servlet>
+  <servlet-name>spring</servlet-name>
+  <servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+  <load-on-startup>1</load-on-startup>
+  </servlet>
+  
+  <servlet-mapping>
+  <servlet-name>spring</servlet-name>
+  <url-pattern>/</url-pattern>
+  
+  </servlet-mapping>
+  
+</web-app>
+```
+
+2. add servlet.config file in WEB_INF
+- include 4 namespaces : bean,context,p,mvc
+- for enabling class internal annotations
+     - to inform SC about the location of base package
+-  to enable annotations based MVC support
+-   configure view resolver bean for auto translation 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:context="http://www.springframework.orgschema/context"
+xmlns:mvc="http://www.springframework.org/schema/mvc"
+xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="">
+
+<!-- for enabling class internal annotations  -->
+<context:annotation-config/>
+
+<!-- to inform SC about the location of base package -->
+<context:component-scan base-package="com.app"/>
+
+<!-- to enable annotations based MVC support -->
+
+<mvc:annotation-driven/>
+<!-- configure view resolver bean for auto translation  -->
+<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver" 
+ p:prefix="/WEB-INF/views" p:suffix=".jsp" p:viewClass="org.springframework.web.servlet.view.JstlView"
+ />
+<!-- import hibernate config xml file -->
+<!--<import resource="classpath:/hibernate-persistence.xml"/>-->
+
+</beans>
+
+```
+
+3. add controller in src folder under one packge 
+- 1. use @Controller
+  -  mandetory to tell SC: 
+   -  whatever follows is a req handling controller bean 
+  - spring bean : singleton and eager
+
+- 2. @RequestMapping("")
+-   to tell SC about request handling method : 
+	-  entry in Handler Mapping bean 
+	-  key = /hello 
+- value = com.app.controller.HelloController:sayHello() 
+
+- 3. o.s.w.s.Model and View  :
+  - holder for holding ModelAttribute  + logical view name  :class
+  -  consructor
+  > ModelAndView(String logicalViewName,String modelAttrName,Object modelAttrValue)
+  -  def scope model attr : current request only 
+- e.g 
+> return new ModelAndView("/welcome", "time",LocalDateTime.now()); 
+
+- 4. add request handling methods to Test Map 
+   -  o.s.ui.Model: i/f 
+   -  => holder of Model attributes
+   -  How to add attributes  ?
+   -  > Model addAttribute(String modelAttrName,Object modelAttrVal)
+	-  IOC : simply tell SC : to inject EMPTY model map in the request handling method : 
+	-  D.I  by adding an argument to req handling method
+
+```java
+package com.app.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller // mandetory to tell SC: whatever follows is a req handling controller bean 
+//spring bean : singleton and eager 
+public class HelloController {
+
+	public HelloController() {
+	
+		System.out.println("in constr of "  + getClass().getName());
+		
+		// TODO Auto-generated constructor stub
+	}
+	
+	// to tell SC about request handling method : 
+		// entry in Handler Mapping bean 
+		// key = /hello 
+		//value = com.app.controller.HelloController:sayHello()
+	@RequestMapping("/test")
+	public String sayHello() {
+		
+		System.out.println(" hello , its test 1");
+		
+		return "/welcome";
+		// req handling controller returns 
+		//: logical view name (forward view ) to D.S(Dispatcher Servlet)		
+		
+	}
+	// add request handling method to test o.s.w.s.ModelAndView 	
+	@RequestMapping("/test2")
+	public ModelAndView sayhello2() {
+		System.out.println("in test 2 ");
+		//o.s.w.s.Model and View  :holder for holding ModelAttribute  + logical view name  :class
+		// consructor ModelAndView(String logicalViewName,String modelAttrName,Object modelAttrValue)
+		// def scope model attr : current request only 
+		
+		return new ModelAndView("/welcome", "time", LocalDateTime.now()); 
+		// request handling controller returning logical view name + 1 model Attr ---> DS 
+	}
+	// add request handling methods to Test Map 
+		// o.s.ui.Model: i/f => holder of Model attributes
+		// How to add attributes  ? Model addAttribute(String modelAttrName,Object modelAttrVal)
+		// IOC : simply tell SC : to inject EMPTY model map in the request handling method : D.I by 
+		// : by adding an argument to req handling method
+	@RequestMapping("/test3")
+	public String sayhello3(Model map) {
+		System.out.println("in test 3");
+		
+		map.addAttribute("date", LocalDate.now())
+		.addAttribute("list", Arrays.asList(10,20,30,40,50)); 
+		
+		return "/welcome"; 
+		
+		
+	}
+	
+}
+
+```
+
+1. forward request to welcome.jsp from Controller 
+  - access them using EL synttax from request scope  
+
+```java
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+    pageEncoding="UTF-8"%>
+
+<h4> Welocme to Spring MVC by request mapping</h4>
+
+<h4> Test 2: Spring server Time : ${requestScope.time} </h4>
+
+<h4> Test 3 : Spring server date :${requestScope.date}</h4>
+<h3>Test 3: Spring serverlist: ${requestScope.list}</h3>
+</body>
+</html>
+```
+
+
+## Lab sequence
+
+0. Open J2EE perspective
+1. Create dynamic web project
+2. Add spring-all user lib in 2 places
+- 2.1 Under build path (R click on project --build path --configure build path --Add --user lib --spring-all)
+Apply.
+- 2.2 Under deployment assembly(WEB-INF/lib)
+Choose deployment assembly option --add --build path entries --select spring-all --apply n close.
+
+- All XML templates are present in : -  
+  >day12-data\day12_help\spring-hibernate-templates folder
+
+3. Copy welcome-file-list , servlet & servlet-mapping tags from the web.xml under templates folder
+
+- Meaning :
+ -  To Configure spring supplied Front controller(o.s.w.s.DispatcherServlet) to intercept any request from any client, in web.xml.
+
+- Detailed explanation of tags
+
+```xml
+<url-pattern>/</url-pattern> => any request received from any client
+<servlet-name>spring</servlet-name> => can be replaced by any name
+<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class> => spring supplied Front Controller
+<load-on-startup>1</load-on-startup> => Web container (WC) will start the life cycle of DispatcherServlet , at the web app deployment time.
+```
+- 4. Job of D.S (DispatcherServlet)
+- To start the SC (spring container) in web app.
+	
+
+4. Copy spring-servlet.xml from templates folder , under <WEB-INF> of your web app.
+- Initially comment or remove this line.
+> <import resource="classpath:/hibernate-persistence.xml"/>
+
+- 1. Meaning 
+  - spring-servlet.xml 
+  - =>  master configuration xml file for starting SC.
+  
+  - D.S(DispatcherServlet) reads this config file ,
+  -  @ web app deployment time , to start SC , within a web app. 
+   -  (represented by i/f WebApplicationContext --sub i/f of ApplicationContext)
+
+  - Default location of this master configuration xml file--<WEB-INF>
+  - Default name -- servletName-servlet.xml
+  - Since we have supplied , servlet-name , in web.xml as spring , in our case it's spring-servlet.xml
+
+5. Detailed explanation of tags
+ 
+- 1.  <context:annotation-config />
+ - => Enables class internal annotations.
+- 2.  <context:component-scan base-package="com.app"/>
+ - => SC will scan only com.app & its sub packges for spring beans.
+- 3.  <mvc:annotation-driven/>
+-  => Enables annotation based MVC support (
+-  i.e enables automatic population of HandlerMapping bean using @RequestMapping annotation in Controller beans
+
+- 4. Regarding HandlerMapping bean
+> o.s.w.s.HandlerMapping --i/f
+- Implementation class --  >RequestMappingHandlerMapping
+- Consists of a map , populated by SC @ web app deployment time.
+- 1. Key --value of @RequestMapping annotation, in controller bean
+- 2. Value --F.Q controller cls name  + method name.
+
+ - 5. 
+ ```xml
+  <bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+p:prefix="/WEB-INF/views" p:suffix=".jsp" p:viewClass="org.springframework.web.servlet.view.JstlView"
+/>	
+```
+- 1. Meaning : Configure , spring supplied ViewResolver bean , for translation from logical view name to actual view name (by wrapping it in prefix n suffix)
+	
+- 2. More Details about ViewResolver Bean
+- o.s.w.s.ViewResolver --i/f
+- Implementation class :
+- >  o.s.w.s.view.InternalResourceViewResolver 
+- It uses setter based D.I . 
+- It has 3 properties
+- 1. prefix = /WEB-INF/views
+- 2. suffix = .jsp
+- 3. viewClass = JstlView
+
+- eg : If logical view name is "/welcome"
+- Actual view name will be : /WEB-INF/views/welome.jsp
+##### This completes configuration steps .
+
+6. Create request handling controller, to test MVC flow.(under com.app.controller pkg)
+- eg : HelloController
+
++  Mandatory Annotations used --
+- 1.   @Controller --class level.
+- 2. @RequestMapping --method level annotation
+  - (To  map clnt requests onto specific controller class's specific method)
+eg :
+```java
+ @Controller 
+public class HelloController {
+
+@RequestMapping("/hello1") 	
+	public String sayHello1()
+	{
+	  return "/welcome";
+	}
+}
+```
+- 1. Explanation :
+  -  HelloController bean is singleton n eager (i.e it's single instance will be created at web app deployment time)
+- So for this controller , what will be the entry in HandlerMapping bean, created at web app deployment time ?
+  - Key -- /hello1
+  - Value -- com.app.controller.HelloController.sayHello1
+
+
+7. To  Test Spring MVC flow --
+- 1. Add index.jsp in WebContent , with a link.
+<a href="hello1">Test Spring MVC Flow</a>
+Note : href of the anchor tag MUST match will the value of the @RequestMapping annotation.
+
+ - 2. Add a  welcome.jsp under a folder <WEB-INF>/views/ & add a welcome message.
+
+8. Run web application
+```java
+R click --run on server 
+Troubleshooting tips : check on server console for the following : 
+7.1 Initializing Spring DispatcherServlet 'spring' 
+7.2 org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'spring'
+7.3 in constr of com.app.controller.HelloController
+in init
+This indicates that spring based web app is up n running. 
+Go to client browser & test it!
+```
+
+
+
+
+
+# dAY 13
+
+## sequence (spring hibernate integration steps)
+
+1. Create dynamic web project
+2. Create User library --spring-hibernate-rest jars
+DO NOT add any other library.
+Add user lib under 2 places : build path n deployment assembly.
+
+3. Add DispatcherServlet entry in web.xml  -- to ensure all request pass through central dispatcher servlet.
+4. Create spring-servlet.xml under <WEB-INF> -- To allow D.S to create Web application context using master config xml file.
+
+- 4.1 Copy earlier entries.(ctx,mvc & view resolver)
+
+5. Create <resources> & copy database.properties & hibernate-persistence.xml from <spring-hibernate-templates>
+What it contains --- 
+- 5.1 DataSource bean --- Apache (Connection pool)
+- 5.2 SF bean -- Spring
+- 5.3 Tx Mgr --- Spring
+- 5.4 enabled anno support for Txs(@Transactional)
+
+6. import hibernate-persistence.xml into spring-servlet.xml
+
+What is o.s.orm.hibernate5.LocalSessionFactoryBean? 
+A class  that creates a Hibernate SessionFactory. This is the usual way to set up a shared Hibernate SessionFactory in a Spring application context; the SessionFactory can then be passed to data access objects via dependency injection.
+
+Configuration steps over....
+
+7. Identify persistence requirements & create POJO/Model/DTO.
+POJO properites --- represent 1. DB cols 2.Request params --i.e clnt's conversational state.
++ P.L validation rules --anno.
+class level --@Entity,@Table
+Anno -- field level --- @NotEmpty,@NotNull,@Email....
+Annotation -- prop level(getter) --@Id,@Column....
+
+8. Create DAO layer 
+
+I/F -- Dao i/f --- validateCustomer
+Implementation class ---
+dependency --- SessionFactory -- @AutoWired
+No need to manage Txs --directly get session from SF & perform CRUD operation.
+
+9. Create Service Layer --i/f & then implementation class
+@Service & @Transactional --- annotations.
+Inject dependency of Dao Layer.
+
+10. Create or copy existing controllers & test the flow.
 
