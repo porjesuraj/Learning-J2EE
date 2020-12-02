@@ -1,6 +1,6 @@
-package org.app.dao;
+package com.app.dao;
 
-import org.app.pojos.Vendor;
+import com.app.pojos.Vendor;
 
 public interface IVendorDao {
 

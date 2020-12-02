@@ -1,4 +1,4 @@
-package org.app.pojos;
+package com.app.pojos;
 
 public enum AcType {
 

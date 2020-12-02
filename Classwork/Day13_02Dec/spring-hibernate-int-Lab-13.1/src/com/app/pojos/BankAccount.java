@@ -1,4 +1,4 @@
-package org.app.pojos;
+package com.app.pojos;
 
 import java.time.LocalDate;
 
@@ -35,10 +35,15 @@ public class BankAccount {
 	// many to one association between two entites
 	
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne /* (fetch = FetchType.LAZY) */
 	@JoinColumn(name = "vendor_id",nullable = false)
 	private Vendor accountOwner;
 
+  public BankAccount() {
+	// TODO Auto-generated constructor stub
+}
+	
+	
 	public BankAccount(AcType acType, double balance, LocalDate creationDate) {
 		super();
 		this.acType = acType;

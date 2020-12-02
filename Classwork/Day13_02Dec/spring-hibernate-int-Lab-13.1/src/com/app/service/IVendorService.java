@@ -1,6 +1,6 @@
-package org.app.service;
+package com.app.service;
 
-import org.app.pojos.Vendor;
+import com.app.pojos.Vendor;
 
 public interface IVendorService {
 
