@@ -3921,3 +3921,355 @@ Date creation_date=sdf.parse(request.getParameter("creation_date"));
 
 
 # Day 14 
+
+## What is Maven ?
+
+Build automation tool for overall project management.
+
+It helps in 
+1.  checking a build status
+2.  generating reports (basically javadocs) 
+3.  setting up the automated build process and monitors the same.
+
+Why Maven ?
+It eases out  source code compilation, distribution, documentation, collaboration with different teams .
+
+Maven tries 2 describe
+
+1. How a software is built.
+2. The dependencies, plug-ins & profiles that the project is associated in a standalone or a distributed environment.
+
+
+Vendor -- Apache
+
+
+Earlier build tool -- Ant 
+Vendor -- Apache. 
+
+Ant disadvantages 
+1. While using ant , project structure had to be defined in build.xml. Maven has a convention to place source code, compiled code etc. So no need to provide information about the project structure in pom.xml file.
+
+2. 
+Maven is declarative, everything you define in the pom.xml file.
+No such support in ant.
+
+3. 
+There is no life cycle in Ant, where as  life cycle exists in Maven.
+
+Maven advantages
+
+4. Managing dependencies 
+5. Uses Convention over configuration - configuration is very minimal
+6. Multiple/Repeated builds can be achieved.
+
+7. Plugin management.
+8. Testing - ability to run JUnit and other integration test suites.
+
+
+What is POM? (Project Object Model)
+
+It is  the core element of any maven project. 
+Any maven project consists of one configuration file called pom.xml.
+Location --In the root directory of any maven project. 
+
+It contains the details of the build life cycle of a project.
+
+Contents 
+Dependencies used in the projects (Jar files)
+Plugins used 
+Project version
+Developers involved in the project
+Build profiles etc.
+
+Maven reads the pom.xml file, then executes the goal.
+
+Elements of maven pom.xml file
+
+
+1. project	  It is the root element of pom.xml file.
+2. modelVersion	It is the sub element of project. It specifies the modelVersion. 
+3. groupId	It is the sub element of project. It specifies the id for the project group.(typically organization name)
+4. artifactId	It is the sub element of project. It specifies the id for the artifact (project). An artifact is something that is either produced or used by a project. Examples of artifacts produced by Maven for a project include: JARs, WARs.
+5. version	It is the sub element of project. It specifies the version of the artifact under given group.
+6. 
+packaging --	defines packaging type such as jar, war etc.
+7. name --	defines name of the maven project.
+8. plugins    ---compiler plugins , eclipse plugins
+9. dependencies  -- collection of dependencies for this project.
+Within that -- 
+dependency  --  defines a specific dependency.(eg : hibernate dependency,spring web) 
+9. scope  --	defines scope for this maven project. It can be compile, provided, runtime, test and system.
+
+Goals in Maven
+Goal in maven is nothing but a particular task which leads to the compiling, building and managing of a project. A goal in maven can be associated to zero or more build phases. Only thing that matters is the order of the goals defined for a given project in pom.xml. Because, the order of execution is completely dependent on the order of the goals defined.
+eg : clean , build ,install ,test 
+
+What is a Maven Repository
+
+A maven repository is a directory of packaged JAR file with pom.xml file. Maven searches for dependencies(JARs) in the repositories. There are 3 types of maven repository:
+
+    Local Repository
+    Central Repository
+    Remote Repository
+
+Maven searches for the dependencies in the following order:
+
+Local repository then Central repository then Remote repository.
+maven repositories
+
+If dependency is not found in these repositories, maven stops processing and throws an error.
+
+1. Maven Local Repository
+
+Maven local repository is located in the  file local system. It is created by the maven when you run any maven command.
+
+By default, maven local repository is HOME / .m2 directory. 
+(Can be updated  by changing the  MAVEN_HOME/conf/settings.xml)
+
+2) Maven Central Repository
+
+Maven central repository is located on the web(Created by the apache maven community)
+
+The path of central repository is: https://mvnrepository.com/repos/central
+
+
+3) Maven Remote Repository
+
+Maven remote repository is also located on the web. Some of libraries that are  missing from the central repository eg  JBoss library , Oracle driver etc, can be located from remote repository.
+
+
+Maven Build Life Cycle 
+What is it ?
+The sequence of steps which is defined in order to execute the tasks and goals of any maven project is known as build life cycle in maven.
+ 
+Maven comes with 3 built-in build life cycles 
+
+Clean - this phase involves cleaning of the project (for a fresh build & deployment)
+Default - this phase handles the complete deployment of the project
+Site - this phase handles the generating the java documentation of the project.
+
+Build Profiles in Maven
+
+It is a subset of elements which allows to customize builds for particular environment. Profiles are also portable for different build environments.
+
+Build environment basically means a specific environment set for production and development instances. When developers work on development phase, they use test database from the production instance and for the production phase, the live database will be used.
+
+So, in order to configure these instances maven provides the feature of build profiles. Any no. of build profiles can be configured and also can override any other settings in the pom.xml
+
+eg :  profiles can be set for dev, test and production phases.
+
+
+
+Installation (w/o IDE)
+1. Download Maven from Apache (version 3.x)
+2. Add MAVEN_HOME as environment variable
+3. Add maven/bin under path (for easy accessibility)
+4.Verify maven
+  mvn -- version 
+  
+  OR use m2e plug-in (a standard part of Eclipse for J2EE)
+
+
+## Enter Spring boot 
+
+1. What is Spring Boot?
+Spring Boot is a Framework from "The Spring Team" to ease the bootstrapping and development of new Spring Applications.
+
+It provides defaults for code and annotation configuration to quick start new Spring projects within no time. 
+
+It follows “Opinionated Defaults Configuration” Approach to avoid lot of boilerplate code and configuration to improve Development, Unit Test and Integration Test Process.
+
+2. What is NOT Spring Boot?
+Spring Boot Framework is not implemented from the scratch by The Spring Team
+It's implemented on top of existing Spring Framework (Spring IO Platform).
+It is not used for solving any new problems. It is used to solve same problems like Spring Framework.
+(i.e to help in writing enterprise applications)
+
+3. Advantages of Spring Boot:
+It is very easy to develop Spring Based applications with Java 
+It reduces lots of development time and increases productivity.
+It avoids writing lots of boilerplate Code, Annotations and XML Configuration.
+It is very easy to integrate Spring Boot Application with its Spring Ecosystem like Spring JDBC, Spring ORM, Spring Data, Spring Security etc.
+It follows “Opinionated Defaults Configuration” Approach to reduce Developer effort
+It provides Embedded HTTP servers like Tomcat, Jetty etc. to develop and test our web applications very easily.
+It provides CLI (Command Line Interface) tool to develop and test Spring Boot(Java or Groovy) Applications from command prompt very easily and quickly.
+It provides lots of plugins to develop and test Spring Boot Applications very easily using Build Tools like Maven and Gradle
+It provides lots of plugins to work with embedded and in-memory Databases very easily.
+
+In short 
+Spring Boot = Spring Framework + Embedded HTTP Server(eg Tomcat) - XML Based configuration - efforts in identifying dependencies in pom.xml 
+
+
+4. What is that "Opinionated Defaults Configuration" ?
+
+When we use Hibernate/JPA, we would need to configure a datasource, a session factory, a transaction manager among lot of other things.
+Refer to our hibernate-persistence.xml
+  
+Spring Boot says can we look at it differently ?
+Can we auto-configuring a Data Source(connection pool) / session factory / Tx manager  if Hibernate jar is on the classpath?
+
+When a spring mvc jar is added into an application, can we auto configure some beans automatically?
+(eg HandlerMapping , ViewResolver n configure DispatcherServlet)
+
+By the way : 
+There would be of course provisions to override the default auto configuration.
+
+5. How does it work ?
+Spring Boot looks at 
+1. Frameworks available on the CLASSPATH 
+2. Existing configuration for the application. 
+Based on these, Spring Boot provides basic configuration needed to configure the application with these frameworks. This is called Auto Configuration.
+
+6. What is Spring Boot Starter ?
+Starters are a set of convenient dependency descriptors that you can include in your application's pom.xml
+.
+eg : Suppose you want to develop a web application.
+
+W/o Spring boot ,  we would need to identify the frameworks we want to use, which versions of frameworks to use and how to connect them together.
+
+BUT all web application have similar needs. 
+ These include Spring MVC, Jackson Databind (for data binding), Hibernate-Validator (for server side validation using Java Validation API) and Log4j (for logging). Earlier while creating any web app, we had to choose the compatible versions of all these frameworks.
+
+With Spring boot : You just add  Spring Boot Starter Web.
+
+Dependency for Spring Boot Starter Web
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-web</artifactId>
+</dependency>
+
+Just by adding above starter , it will add lot of JARs under maven dependencies
+
+
+Another eg : If  you want to use Spring and JPA for database access, just include the spring-boot-starter-data-jpa dependency in your project, and you are good to go.
+
+7. Another cool feature of Spring boot is : we don't have to worry about deploying our applications to external container.  It comes with an embedded servlet container.
+
+8.Important components of a Spring Boot Application
+
+Below is the starting point of a Spring Boot Application
+
+@SpringBootApplication
+public class HelloSpringBootApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(HelloSpringBootApplication.class, args);
+	}
+
+}
+About : org.springframework.boot.SpringApplication
+It's Class  used to bootstrap and launch a Spring application from a Java main method. 
+
+By default class will perform the following steps to bootstrap the application
+1. Create an ApplicationContext instance (representing SC)
+2. Manages life cycle of spring beans
+
+
+@SpringBootApplication - This is where all the spring boot magic happens.
+It consists of following 3 annotations.
+
+1. @SpringBootConfiguration
+It  tells spring boot  that this class here can have several bean definitions. We can define various spring beans here and those beans will be available at run time .
+
+2. @EnableAutoConfiguration
+It tells spring boot to automatically configure the spring application based on the dependencies that it sees on the classpath.
+
+eg:
+If we have a MySql dependency in our pom.xml , Spring Boot will automatically create a data source,using the properties in application.properties file.  
+
+If we have spring web in pom.xml , then spring boot will automatically create the dispatcher servlet n other beans (HandlerMapping , ViewResolver)
+
+All the xml, all the java based configuration is now gone.It all comes for free thanks to spring boots to enable auto configuration annotation. 
+
+
+
+3. @ComponentScan (equivalent to xml tag : context:component-scan)
+
+So this  tells us that spring boot to  scan through the classes and see which all classes are marked with the stereotype annotations like @Component Or @Service @Repository and manage  these spring beans . Default base-pkg is the pkg in which main class is defined.
+Can be overridden by
+eg : 
+@ComponentScan(basePackages = "com")
+For scanning entities :  (equivalent to packagesToScan)
+@EntityScan(basePackages = "com.app.pojos")
+
+Steps
+
+1. File --New --Spring starter project -- add project name , group id ,artifact id ,pkg names , keep packaging as war for Spring MVC web application.
+(pic1)
+
+2. Add dependencies  (pic2)
+web -- web 
+sql -- Spring Data JPA, MYSQL
+Core -- DevTools
+
+
+3. Copy the entries from supplied application.properties & edit DB configuration.
+-------------------------------
+
+4.For Spring MVC (with JSP view layer demo) using spring boot project
+
+Add following  dependencies ONLY for Spring MVC with JSP as View Layer in pom.xml
+
+	<!-- Additional dependencies for Spring MVC -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>jstl</artifactId>
+		</dependency>
+
+
+
+
+5. Create under src/main : webapp / WEB-INF folders
+
+6. Create HomeController n test it.
+
+7. Port earlier spring MVC app , observe the problems.
+& fix it.
+Port Product/Vendor based web app.
+
+Problem observerd : app failed to start
+Reason : Could not find org.hibernate.SessionFactory (since Spring boot DOES NOT support any native hibenrate implementationj directly)
+Solution : Replace hibernate's native API (org.hibernate) by JPA
+
+
+In DAO layer : replace native hibernate API by JPA
+i.e instead of auto wiring SF in DAO layer : inject JPA' EntityManager directly in DAO.
+How ?
+@PersistenceContext  
+//OR can continue to use @AutoWired : spring supp,lied annotation
+private EntityManager mgr;
+//uses def persistence unit , created auto by spring boot using db setting added //in application.properties file , 1 per app / DB
+
+8. Test Entire application.
+
+
+10. Replace JPA by spring DATA JPA
+
+11. Enter REST
+
+1.
+<!--  added to work with jstl  -->
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-tomcat</artifactId>
+</dependency>
+
+2. For JSP working
+<dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+</dependency>
+
+3. JSTL library
+<!-- for JSTL  -->
+<dependency>
+<groupId>javax.servlet</groupId>
+<artifactId>jstl</artifactId>
+</dependency>
+
+

@@ -3694,3 +3694,183 @@ Inject dependency of Dao Layer.
 
 10. Create or copy existing controllers & test the flow.
 
+
+# day 14
+
+## For Maven web app with hibernate
+- (POM.xml support for ---Spring MVC/ AOP/Core/REST/Hibernate)
+
+1. Create Maven Project
+New -- Maven Project ---
+Check Create Simple Project (skip archetype selection)
+Choose WAR
+Check Use default workspace location
+Next
+Group ID -- reversed domain name (eg : if domain name is www.serverside.com , then it can be com.serverside )
+Artifact ID -- Name of the WAR File
+Name -- Testing web app with hibernate
+Finish
+
+2. Modify pom.xml , to add
+2.1 Properties  -- 
+2.2 Build plugins  -- 2 plugins (maven-compiler-plugin & maven-eclipse-plugin)
+2.3 Dependencies for --mysql , JUnit , spring , hibernate & json.
+
+3. Project -- R Click -- Maven --Update Project
+
+4. Check project structure for simple Java web application project.
+src/main/java -- Java sources
+src/test/java -- JUnit Test Cases
+src/main/resources --configuration files
+src/test/resources --configuration files for testing
+src/main/webapp --root of web application(equivalent to WebContent)
+
+5. Choose Java EE perspective
+Project -- R Click --Java EE Tools --Generate dep desc stub
+This will create src/main/webapp/WEB-INF/web.xml
+
+Add welcome page as "index.jsp" in web.xml
+
+6. Project -- R Click --Properties --Targeted Runtimes -- Choose Tomcat 8
+
+7. Create packaged classes  under src/main/java.
+utils,pojos,dao,beans,listeners
+
+7.5 Copy log4j.properties,database.properties,hibernate-ersistence.xml(i.e all configuration files) under src/main/resources
+
+8. Project -- R Click  -- Maven Build --goals --clean install
+
+8.5 In case of any errors(red cross!) 
+Project -- R Click -- Maven --Update Project
+
+9. Project -- R Click --- Run on server ---run
+
+
+## Steps in Spring Boot
+If you are using Spring Boot for creating spring MVC web app (view layer)
+1. pom.xml : Add 2 dependencies for : tomcat-embed-jasper & JSTL
+
+<dependency>
+ <groupId>org.apache.tomcat.embed</groupId>
+ <artifactId>tomcat-embed-jasper</artifactId>
+</dependency>
+		
+<dependency>
+ <groupId>javax.servlet</groupId>
+ <artifactId>jstl</artifactId>
+</dependency>
+
+For Oracle DB
+<dependency>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc8</artifactId>
+    <version>19.6.0.0</version>
+</dependency>
+	
+
+
+
+2. application.properties
+spring.mvc.view.prefix=/WEB-INF/views
+spring.mvc.view.suffix=.jsp
+
+3. Add folders : below src/main
+webapp/WEB-INF : to add view layer.
+
+4. Replace SF.getCurrentSession : EntityManager (@PersistenceContext)
+
+5. Simple case study : Product based.
+
+
+Complete admin flow : register new vendor
+Update vendor details
+
+
+Tx management internals
+
+PRG pattern(Post-redirect-get pattern)
+--- to avoid multiple submission issue in a web app.
+Replace forward view(server pull) by redirect view (clnt pull) --a.k.a double submit guard.
+
+How to replace default forward view by redirect view in spring MVC ?
+Ans -- use redirect keyword.
+eg : return "redirect:/vendor/details";
+D.S invokes response.sendRedirect(response.encodeRedirectURL("/vendor/details"));
+Next request from clnt --- ..../vendor/details
+
+
+How to remember user details till logout?
+Ans : add them in session scope.
+How to access HttpSession in Spring?
+Using D.I
+How  -- Simply add HttpSession as method argument of request handling method.
+
+
+How to remember the details(attributes) till the next request (typically required in PRG --redirect view)
+Ans -- Add the attributes under flash scope.
+(They will be visible till the next request from the same clnt)
+How to add ?
+Use i/f -- o.s.w.s.mvc.support.RedirectAttributes
+Method
+public RedirectAttributes addFlashAttribute(String attrName,Object value)
+
+How to access them in view layer in the next request?
+via request scope attributes.
+
+
+eg : In case of successful login --save user details under session scope(till user log out) & retain status mesg only till the next request.
+In case of invalid login --save status under request scope.
+
+
+How to take care of links(href)/form actions + add URL rewriting support ?
+1. Import spring supplied JSP tag lib.
+(via taglib directive)
+prefix ="spring"
+
+2.  Use the tag.
+<a href="<spring:url value='/user/logout'/>">Log Out</a>
+ / --- root of curnt web app.
+
+
+What will be the URL if cookies are enabled ?
+http://host:port/spring_mvc/user/logout
+
+What will be the URL if cookies are disabled ?
+http://host:port/spring_mvc/user/logout;jsessionid=egD5462754
+
+OR form action example
+eg : <form action="<spring:url value='/admin/list'/>"> .....
+</form>
+
+From Logout 
+1. Discard session
+2. Forward the client to logout.jsp
+
+How to auto navigate the clnt to home page after logging out after some dly ?
+Ans : By setting refresh header of HTTP response.
+
+API of HttpServletResponse
+public void setHeader(String name,String value)
+
+name --- refresh
+value --- 10;url=home page url (root of web app)
+
+How to get the root of curnt web app ?
+API of HttpServletRequest
+String getContextPath()
+
+What will hapeen if any controller returns redirect view name to D.S ?
+eg : UserController -- return "redirect:/admin/list"
+D.S skips the V.R & sends temp redirect response to the clnt browser.
+How ?
+D.S invokes --- response.sendRedirec(response.encodeRedirectURL(".../admin/list");
+So clnt browser will send a next request ---with method=get
+URL --
+http://host:port/spring_mvc/admin/list
+
+
+Complete Admin Flow
+1. List Vendors
+2. vendor deletion
+
+## 
