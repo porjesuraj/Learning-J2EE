@@ -4355,3 +4355,167 @@ private EntityManager mgr;
 </dependency>
 
 
+
+# Day 15
+
+## Today's Topics
+- 2 way form binding
+- P.L Validations
+- WAR file creation n distribution in production env.
+- RESTful web services : concept n implementation
+
+
+## Revise :
+Native Hibernate API vs JPA
+
+Native Hibernate API
+In DAO Layer :
+pkg : org.hibernate : SF , Session, Transaction,Query...
+Spring supplies : LocalSessionFactory bean --provider of SF --- getCurrentSession --Session
+DAO 's dependency : SF : @AutoWired
+
+Session API : 
+1. save/persist/saveOrUpdate/merge
+2. get(Class<T> cls,Serializable id)
+3. JPQL -- createQuery --Query --getSingleResult/getResultList
+4  public void update(Object detachedPojo)
+5. public void delete(Object persistentPOJO)
+
+JPA : spec (part of J2EE specs)
+In DAO Layer : javax.persistence
+i/f : EntityManagerFactory , EntityManager (equivalent to Session)
+DAO 's dependency  : EntityManager  : D.I -- @PersistenceContext / @AutoWired : JPA anno
+eg : In DAO layer : 
+@PersistenceContext //(name="persistence unit")  
+private EntityManager mgr;//L1 cache
+
+
+persistence unit => DB => DB cn pool 1/ DB /app
+Spring Boot : Hikari : fastest db cn pool vendor : auto configured 
+For configuring it : What are the pre requisites ?
+1. add Spring data jpa starter dependency
+2. configure : DB settings
+db url , user name n password ---application.properties)
+
+
+
+EntityManager  API
+1. public void persist(Object transientPojo)
+When will actual DML (insert) be fired ? upon commit : are you (prog) managing the txs
+NO (it's managed by spring supplied tx mgr bean : w/o spring boot : it had to be explicitly configured : hibernate-persistence.xml . After spring : auto config )
+After @Transactional method rets (service / dao layer ) : chks if there are any un-chked excs --no --commit tx (insert/update/delete) .
+
+2. find(Class<T> pojo, Object id)
+3. JPQL -- createQuery --Query --getSingleResult/getResultList
+4  public Object merge(Object detachedPojo) : rets persistent pojo
+5. public void remove(Object persistentPOJO)
+
+New Objective : 
+Important change : Replace JPA by Spring Data JPA
+refer to : "regarding spring data JPA"
+
+
+Objectives solved
+1. Delete Vendor Details
+How to take care of links(href)/form actions + add URL rewriting support ?
+1. Import spring supplied JSP tag lib.
+(via taglib directive)
+def. prefix ="spring"
+
+2.  Use the tag.
+eg : vendor id=10
+<a href="<spring:url value='/admin/delete?vid=${v.id}'/>">Delete Vendor Details</a>
+
+/ =>  root of curnt web app (eg : /day15)
+
+What will be the URL if cookies are enabled ? : http://host:port/day15.1/admin/delete?vid=10
+
+
+What will be the URL if cookies are disabled ? : URL : appended by jsessionid
+
+OR form action example , with <spring:url>
+eg : <form action="......."> 
+</form>
+
+From Logout 
+1. Discard session
+2. Forward the client to logout.jsp
+
+How to auto navigate the clnt to home page after logging out after some dly ?
+Ans : By setting refresh header of HTTP response.
+
+API of HttpServletResponse
+public void setHeader(String name,String value)
+
+name --- refresh
+value --- 10;url=home page url (root of web app)
+
+How to get the root of curnt web app ?
+API of HttpServletRequest
+String getContextPath()
+
+
+
+2. Form binding Technique 
+Refer to readme : "regarding form binding"
+
+4. P.L Validations
+refer to diagram	
+
+
+3. Objective : Distributing spring web MVC in production environment
+
+Run as : Maven goal : install 
+Run it as a standalone war file from cmd prompt.
+java -jar warFileName.war
+--------------------------
+
+Enter REST
+1. Monolithic MVC based Web application  vs RESTful web service
+(eg scenario : weather forecasting n flight scheduling)
+refer : web app vs web service pic
+2.Full stack Applicaiton details
+refer : full stack development pic
+3. "spring-restful-sequence.txt"
+
+4. "RestController vs MVC Controller"
+5. Annotations
+
+
+Objectives 
+1. Understanding @PathVariable & @ResponseBody
+(in spring boot MVC itself)
+
+2. Create  back end RESTful web service API endpoint for existing angular app.
+(Product CRUD App)
+Check angular flow.
+
+Steps
+1. Create spring boot app : using spring boot starter project (IMPORTANT : choose packaging as JAR)
+2. Use same spring boot startes as earlier.
+3. NO additional dependencies for view layer(i.e no jstl n no tomcat-embeded jasper  dependencies , in pom.xml
+3. BUT add validation related dependency in pom.xml
+<dependency>
+<groupId>org.springframework.boot</groupId>
+<artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+4. Copy application.properties from earlier spring boot project
+(No view resolver related properties)
+5. Build the layers in bottoms up manner, for the following objectives.
+
+Objective :
+1. List all Products
+2. Get Product by ID
+3. Create new product
+4. Update exisitng product
+5. Delete product by ID
+
+Layers :
+REST Controller --Service --Repository--POJO --DB
+
+Develop REST end point using Postman app & then integrate with angular app.
+
+
+
+
+
