@@ -4468,7 +4468,7 @@ refer to diagram
 Run as : Maven goal : install 
 Run it as a standalone war file from cmd prompt.
 java -jar warFileName.war
---------------------------
+
 
 Enter REST
 1. Monolithic MVC based Web application  vs RESTful web service
@@ -4482,7 +4482,7 @@ refer : full stack development pic
 5. Annotations
 
 
-Objectives 
+## Objectives 
 1. Understanding @PathVariable & @ResponseBody
 (in spring boot MVC itself)
 
@@ -4516,6 +4516,650 @@ REST Controller --Service --Repository--POJO --DB
 Develop REST end point using Postman app & then integrate with angular app.
 
 
+## Form Binding
+
+1. 1. If there multiple request params(use case -- register/update) --- bind POJO directly to a form.(2 way form binding technique)
+How ?
+1.1 For  loading the form (in showForm method of the controller)  , bind empty POJO (using def constr) in model map 
+How  ? 
+Explicit --add Model as dependency & u add
+map.addAttribute(nm,val)
+OR better way 
+implicit -- add POJO as a dependency
+eg : User registration
+@GetMapping("/reg")
+public String showForm(User u) {...}
+
+What will SC do ?
+SC --- User u=new User();
+chks --- Are there any req params coming from client ? --- typically --no --- only getters will be called --
+adds pojo as model attr (in Model map)
+map.addAttribute("user",new User());
+
+1.2 In form (view ---jsp)  -use spring form tags along with modelAttribute
+Steps
+1. import spring supplied form tag lib
+2. Specify the name of modelAttribute under which form data will be exposed.(name of model attr mentioned in the controller)
+<s:form method="post" modelAttribute="user">
+  <s:input path="email"/>.....
+</s:form>
+
+
+1.3 Upon form submission (clnt pull I)
+clnt sends a new req --- containing req params
+@PostMapping("/reg")
+public String processForm(User u,RedirectAttributes flashMap,HttpSession hs) {
+//SC calls
+User u=new User();
+SC invokes MATCHING (req param names --POJO prop setters)
+setters. -- conversational state is transferred to Controller.
+adds pojo as model attr (in Model map)
+map.addAttribute("user",u)
+Thus you get a populated POJO directly in controller w/o calling <jsp:setProperty> & w/o using any java bean.
 
 
 
+
+## Spring Data JPA
+
+1. In entire web application ,the DAO layer usually consists of a lot of boilerplate code that can  be simplified. 
+
+Benefits of simplification
+1. Decrease in the number of artifacts that we need to define and maintain
+2. Consistency of data access patterns and consistency of configuration.
+
+Spring Data JPA framework takes this simplification one step forward and makes it possible to remove the DAO implementations entirely. The interface of the DAO is now the only artifact that we need to explicitly define.
+
+For this ,  a DAO interface needs to extend the JPA specific Repository interface – JpaRepository or its super i/f CrudRepository. This will enable Spring Data to find this interface and automatically create an implementation for it.
+
+By extending the interface we get the most required CRUD methods for standard data access available in a standard DAO.
+
+eg : CRUDRepository methods
+long 	count()
+Returns the number of entities available.
+void 	delete(T entity)
+Deletes a given entity.
+void 	deleteAll()
+Deletes all entities managed by the repository.
+void 	deleteAll(Iterable<? extends T> entities)
+Deletes the given entities.
+void 	deleteById(ID id)
+Deletes the entity with the given id.
+boolean 	existsById(ID id)
+Returns whether an entity with the given id exists.
+Iterable<T> 	findAll()
+Returns all instances of the type.
+Iterable<T> 	findAllById(Iterable<ID> ids)
+Returns all instances of the type with the given IDs.
+Optional<T> 	findById(ID id)
+Retrieves an entity by its id.
+<S extends T>
+S 	save(S entity)
+Saves a given entity.
+<S extends T>
+Iterable<S> 	saveAll(Iterable<S> entities)
+Saves all given entities.
+
+Method of JpaRepository
+void 	deleteAllInBatch()
+Deletes all entities in a batch call.
+void 	deleteInBatch(Iterable<T> entities)
+Deletes the given entities in a batch which means it will create a single Query.
+List<T> 	findAll() 
+<S extends T>
+List<S> 	findAll(Example<S> example) 
+<S extends T>
+List<S> 	findAll(Example<S> example, Sort sort) 
+List<T> 	findAll(Sort sort) 
+List<T> 	findAllById(Iterable<ID> ids) 
+void 	flush()
+Flushes all pending changes to the database.
+T 	getOne(ID id)
+Returns a reference to the entity with the given identifier.
+<S extends T>
+List<S> 	saveAll(Iterable<S> entities) 
+
+
+
+3. Custom Access Method and Queries
+By extending one of the Repository interfaces, the DAO will already have some basic CRUD methods (and queries) defined and implemented.
+
+To define more specific access methods, Spring JPA supports quite a few options:
+
+1. simply define a new method in the interface
+provide the actual JPQ query by using the @Query annotation
+When Spring Data creates a new Repository implementation, it analyses all the methods defined by the interfaces and tries to automatically generate queries from the method names. While this has some limitations, it’s a very powerful and elegant way of defining new custom access methods with very little effort.
+eg :  
+   Customer findByName(String name);
+   List<Person> findByEmailAddressAndLastname(EmailAddress emailAddress, String lastname);
+
+  // Enables the distinct flag for the query
+  List<Person> findDistinctPeopleByLastnameOrFirstname(String lastname, String firstname);
+  
+
+  // Enabling ignoring case for an individual property
+  List<Person> findByLastnameIgnoreCase(String lastname);
+  
+
+  // Enabling static ORDER BY for a query
+  List<Person> findByLastnameOrderByFirstnameAsc(String lastname);
+
+List<Person> findByAddressZipCode(ZipCode zipCode);
+
+Assuming a Person has an Address with a ZipCode. In that case, the method creates the property traversal x.address.zipCode.
+
+Limiting the result size of a query with Top and First
+
+User findFirstByOrderByLastnameAsc();
+
+User findTopByOrderByAgeDesc();
+
+Page<User> queryFirst10ByLastname(String lastname, Pageable pageable);
+
+Slice<User> findTop3ByLastname(String lastname, Pageable pageable);
+
+List<User> findFirst10ByLastname(String lastname, Sort sort);
+
+List<User> findTop10ByLastname(String lastname, Pageable pageable);
+
+2. Or in case of custom queries , can add directly in DAO i/f.
+eg : 
+@Query("select u from User u where u.emailAddress = :em")
+  User findByEmailAddress(String emailAddress);
+ 
+@Query("SELECT p FROM Person p WHERE LOWER(p.name) = LOWER(:nm)")
+Foo retrieveByName(@Param("nm") String name);
+ 
+
+3. Transaction Configuration
+The actual implementation of the Spring Data managed DAO is  hidden since we don’t work with it directly. It's implemented by  – the SimpleJpaRepository – which defines default transaction mechanism using annotations.
+
+These can be easily overridden manually per method.
+
+4. Exception Translation is still supplied
+Exception translation is still enabled by the use of the @Repository annotation internally applied on the DAO implementation class. 
+
+##  P.L Validation Annotation
+
+```java
+@NotEmpty OR NotBlank
+	@Length(min=5,max=10)
+	@Email
+	private String email;
+	@NotEmpty
+	@Pattern(regexp="((?=.*\\d)(?=.*[a-z])(?=.*[#@$*]).{5,20})")
+	private String password;
+	@NotNull
+	@Range(min=200,max=2000)
+	private double regAmt;
+	@NotNull
+	@DateTimeFormat(pattern="dd-MMM-yyyy")
+	private Date regDate;
+```
+
+## Background of REST
+
+Web services have really come a long way since its inception. In 2002, the World Wide Web consortium(W3C) had released the definition of WSDL(web service definition language) and SOAP web services. This formed the standard of how web services are implemented.
+
+In 2004, the web consortium also released the definition of an additional standard called RESTful. Over the past couple of years, this standard has become quite popular. And is being used by many of the popular websites around the world which include Facebook and Twitter.
+
+REST is a way to access resources which lie in a particular environment. For example, you could have a server that could be hosting important documents or pictures or videos. All of these are an example of resources. If a client, say a web browser needs any of these resources, it has to send a request to the server to access these resources. Now REST defines a way on how these resources can be accessed.
+
+eg of a web application which has a requirement to talk to other applications such Facebook, Twitter, and Google.
+
+Now if a client application had to work with sites such as Facebook, Twitter, etc. they would probably have to know what is the language Facebook, Google and Twitter are built on, and also on what platform they are built on.
+Based on this, we can write the interfacing code for our web application, but this could prove to be a nightmare.
+
+So instead , Facebook, Twitter, and Google expose their functionality in the form of Restful web services. This allows any client application to call these web services via REST.
+
+Refer to diag --REST 0.png
+
+What is Restful Web Service?
+
+REST is used to build Web services that are lightweight, maintainable, and scalable in nature. A service which is built on the REST architecture is called a RESTful service. The underlying protocol for REST is HTTP, which is the basic web protocol. REST stands for REpresentational State Transfer
+
+The key elements of a RESTful implementation are as follows:
+
+1. Resources  The first key element is the resource itself. Let assume that a web application on a server has records of several employees. Let's assume the URL of the web application is http://www.server.com. Now in order to access an employee record resource via REST, one can issue the command http://www.server.com/employee/1 - This command tells the web server to please provide the details of the employee whose employee number is 1.
+
+2. Request Verbs - These describe what you want to do with the resource. A browser issues a GET verb to instruct the endpoint it wants to get data. However, there are many other verbs available including things like POST, PUT, and DELETE. So in the case of the example http://www.server.com/employee/1 , the web browser is actually issuing a GET Verb because it wants to get the details of the employee record.
+
+3. Request Headers  These are additional instructions sent with the request. These might define the type of response required or the authorization details.
+
+4. Request Body - Data is sent with the request. Data is normally sent in the request when a POST request is made to the REST web service. In a POST call, the client actually tells the web service that it wants to add a resource to the server. Hence, the request body would have the details of the resource which is required to be added to the server.
+
+5. Response Body  This is the main body of the response. So in our example, if we were to query the web server via the request http://www.server.com/employee/1 , the web server might return an XML document with all the details of the employee in the Response Body.
+
+6. Response Status codes  These codes are the general codes which are returned along with the response from the web server. An example is the code 200 which is normally returned if there is no error when returning a response to the client.
+
+Restful Methods
+The below diagram shows mostly all the verbs (POST, GET, PUT, and DELETE) and an example of what they would mean.
+Refer to -- REST 1.png
+
+Let's assume that we have a RESTful web service is defined at the location. http://www.server.com/employee . When the client makes any request to this web service, it can specify any of the normal HTTP verbs of GET, POST, DELETE and PUT. Below is what would happen If the respective verbs were sent by the client.
+
+POST  This would be used to create a new employee using the RESTful web service
+GET - This would be used to get a list of all employee using the RESTful web service
+PUT - This would be used to update all employee using the RESTful web service
+DELETE - This would be used to delete all employee using the RESTful web service
+
+##  What is REST ?
+
+REST stands for REpresentational State Transfer. 
+Why the name ?
+It's the representation of the state of the resource (eg : document/image/student/customer/invoice/bill....) using known data exchange formats(text/xml/json) --which gets transferred between client & server .
+
+REST is web standards based architecture and uses HTTP Protocol for data communication. 
+
+It revolves around resource where every component is a resource and a resource is accessed by a common interface using HTTP standard methods. (ROA)
+
+REST was first introduced by Roy Fielding in 2000.
+
+In REST architecture, a REST Server simply provides access to resources and REST client accesses and presents the resources. 
+
+Here each resource is identified by URIs
+
+REST uses various representations to represent a resource like text, JSON and XML. Most popular light weight data exchange format  used in web services = JSON
+
+HTTP Methods
+Following well known HTTP methods are commonly used in REST based architecture.
+
+GET - Provides a read only access to a resource.
+
+POST - Used to create a new resource.
+
+DELETE - Used to remove a resource.
+
+PUT  - Used to update a existing resource or create a new resource.
+
+
+
+RESTFul Web Services
+
+A web service is a collection of open protocols and standards used for exchanging data between applications or systems. 
+
+Platform & technology independent solution.
+
+Software applications written in various programming languages and running on various platforms can use web services to exchange data over computer networks like the Internet in a manner similar to inter-process communication on a single computer. 
+
+This interoperability (e.g., between Java and Python, or Windows and Linux applications or java & .net ) is due to the use of open standards.
+
+
+Web services based on REST Architecture are known as RESTful web services. 
+
+These web services use HTTP methods to implement the concept of REST architecture. A RESTful web service usually defines a URI, Uniform Resource Identifier a service, provides resource representation such as JSON and set of HTTP Methods.
+
+Annotations 
+1. @PathVariable --- handles URL templates. 
+eg : URL -- http://host:port/test_web/products/10
+Method of Controller
+@GetMapping("/{pid}")
+public Product getDetails(@PathVariable int pid)
+{...}
+In the above URL , the path variable {pid} is mapped to an int . Therefore all of the URIs such as /products/1 or /products/10 will map to the same method in the controller.
+
+2. The @ResponseBody annotation is used to marshall(serialize) the return value into the HTTP response body. Spring comes with converters that convert the Java object into a format understandable for a client. 
+
+3.The @RequestBody annotation, instead, unmarshalls the HTTP request body into a Java object injected in the method.
+
+The RestTemplate is similar to other Spring templates such as JmsTemplate and JdbcTemplate in that Spring eliminates a lot of boot strap code and thus makes your code much cleaner.  When applications use the RestTemplate they do not need to worry about HTTP connections, that is all encapsulated by the template. They also get a range of APIs from the RestTemplate which correspond to the well know HTTP methods (GET, PUT, POST, DELETE, HEAD, OPTIONS).  These APIs are overloaded to cater for things  like different ways of passing parameters to the actual REST API.
+
+Create resful service provider project & then develop its client
+
+
+
+For spring restful web service --actually only spring web mvc , hibernate validator & json jars are sufficient.
+
+Server side steps
+
+1. Create Spring Web MVC application
+2. The layers --service --dao--pojo --DB are the same.
+3. In controller layer , replace @Controller by @RestController annotation, at class level.
+4. Request Handling methods will respond to different HTTP methods
+(get/post/put/delete)
+
+5. For method=get
+
+Can directly return either a resource eg : Person,BankAccount or Customer or still better is can return entire HTTP response encapsulated in ResponseEntity<T>
+
+What is org.springframework.http.ResponseEntity<T> 
+Represents  HTTP  response entity, consisting of status,headers and body.
+
+Constructors
+1. public ResponseEntity(T body,HttpStatus statusCode)
+Create a new ResponseEntity with the given body and status code, and no headers.
+2.public ResponseEntity(T body,MultiValueMap<String,String> headers,                 HttpStatus statusCode)
+Create a new ResponseEntity with the given body and status code, and headers.
+
+1. In the controller's get handling method 
+1.1 In @RequestMapping(value = "add uri with template variables")
+Return type of the method  = either a resource or resource embedded in the ResponseEntity.
+
+2. Use service layer to fetch a resource.
+3. Return it to the client.
+eg : @GetMapping(value="/cust/{id}")
+	public Customer getCustomerById(@PathVariable int id) {
+        invoke service layer method to get customer details
+}
+
+2. In the controller's post handling method 
+1. In @PostMapping(value = "uri")
+Add @RequestBody annotated method argument
+Return type of the method  = either a resource or resource embedded in the ResponseEntity.
+
+3. Use service layer to fetch a resource.
+3. Return it to the client.
+
+
+@RestController : Spring 4′s new @RestController annotation.
+Its a combination of @Controller and @ResponseBody.
+
+@RequestBody : If a method parameter is annotated with @RequestBody, Spring will bind the incoming HTTP request body(for the URL mentioned in @RequestMapping for that method) to that parameter. While doing that, Spring will [behind the scenes] use HTTP Message converters to convert the HTTP request body into domain object [deserialize request body to domain object], based on ACCEPT or Content-Type header present in request.
+
+@ResponseBody : If a method is annotated with @ResponseBody, Spring will bind the return value to outgoing HTTP response body. While doing that, Spring will [behind the scenes] use HTTP Message converters to convert the return value to HTTP response body [serialize the object to response body], based on Content-Type present in request HTTP header. As already mentioned, in Spring 4, no need to use this annotation.
+
+ResponseEntity is a real deal. It represents the entire HTTP response. Good thing about it is that you can control anything that goes into it. You can specify status code, headers, and body. It comes with several constructors to carry the information you want to sent in HTTP Response.
+
+@PathVariable This annotation indicates that a method parameter should be bound to a URI template variable [the one in '{}'].(binding between request handling method parametere & URI template variable)
+
+
+MediaType : With @RequestMapping annotation, you can additionally, specify the MediaType to be produced or consumed (using produces or consumes attributes) by that particular controller method, to further narrow down the mapping.
+
+URI Template Patterns
+URI templates can be used for convenient access to selected parts of a URL in a @RequestMapping
+method.
+A URI Template is a URI-like string, containing one or more variable names. When you substitute
+values for these variables, the template becomes a URI. The proposed RFC for URI Templates defines
+how a URI is parameterized. For example, the URI Template http://www.example.com/users/
+{userId} contains the variable userId. Assigning the value fred to the variable yields http://
+www.example.com/users/fred.
+In Spring MVC you can use the @PathVariable annotation on a method argument to bind it to the
+value of a URI template variable:
+@RequestMapping(value="/owners/{ownerId}", method=RequestMethod.GET)
+public String findOwner(@PathVariable String ownerId, Model model) {
+Owner owner = ownerService.findOwner(ownerId);
+model.addAttribute("owner", owner);
+return "displayOwner";
+}
+The URI Template " /owners/{ownerId}" specifies the variable name ownerId. When the controller
+handles this request, the value of ownerId is set to the value found in the appropriate part of the URI.
+For example, when a request comes in for /owners/abc, the value of ownerId is abc.
+To process the @PathVariable annotation, Spring MVC needs to find the matching URI template
+variable by name. You can specify it in the annotation:
+@RequestMapping(value="/owners/{ownerId}", method=RequestMethod.GET)
+public String findOwner(@PathVariable("ownerId") String theOwner, Model model) {
+// some implementation
+}
+Or if the URI template variable name matches the method argument name you can omit that
+detail. As long as your code is not compiled without debugging information, Spring MVC will match the method argument name to the URI template variable name:
+
+
+## REST Controller vs MVC Controller
+1. A key difference between a traditional MVC controller and the RESTful web service controller is the way that the HTTP response body is created. Rather than relying on a view technology to perform server-side rendering of the  data to HTML, typically a  RESTful web service controller simply populates and returns a java object. The object data will be written directly to the HTTP response as JSON/XML/Text
+
+To do this, the @ResponseBody annotation on the ret type of the request handling  method tells Spring MVC that it does not need to render the java object through a server-side view layer, but that instead the java object returned is the response body, and should be written out directly.
+
+The java object must be converted to JSON. Thanks to Springs HTTP message converter support, you dont need to do this conversion manually. Because Jackson Jar is on the classpath, SC can automatically  convert the java object  to JSON & vice versa (using 2 annotations @ReponseBody & @RequestBody)
+
+API --Starting point 
+o.s.http.converter.HttpMessageConverter<T>
+--Interface that specifies a converter that can convert from and to HTTP requests and responses.
+T --type of request/response body.
+
+Implementation classes
+1. o.s.http.converter.xml.Jaxb2RootElementHttpMessageConverter
+-- Implementation of HttpMessageConverter that can read and write XML using JAXB2.(Java architecture for XML binding)
+
+2. o.s.http.converter.json.
+MappingJackson2HttpMessageConverter
+--Implementation of HttpMessageConverter that can read and write JSON using Jackson 2.x's ObjectMapper class API
+
+----------------
+Annotations 
+Good news is @RestController = @Controller(at the class level) + @ResponseBody added on ret types of all request handling methods
+@ResponseBody ---marshalling the response.
+marshalling (serialization) -- java object --> xml/JSON 
+
+@RequestBody annotation must be still added on a method argument of request handling method , for un marshaling(de serialization) though.
+
+@PathVariable --- handles URL templates. 
+eg : URL -- http://host:port/test_web/products/10
+Method of Controller
+@GetMapping("/{pid}")
+public Product getDetails(@PathVariable int pid)
+{...}
+In the above URL , the path variable {pid} is mapped to an int . Therefore all of the URIs such as /products/1 or /products/10 will map to the same method in the controller.
+
+
+
+
+
+## REST Annotation
+
+1. Annotations 
+1. @PathVariable --- handles URL templates. In the below code, the path variable {name} is mapped to a String object (@PathVariable("name") String name). Therefore all of the URI such as /users/xx or /users/yy will map to the methods in the controller.
+
+eg : URI  http://www.example.com/spring_mvc/users/123 
+Above contains the variable userId. Assigning the value "123" to the variable yields http://www.example.com/users/123
+
+How to acces URI  variable ?
+
+In Spring MVC you can use the @PathVariable annotation on a method argument to bind it to the value of a URI template variable:
+eg : URL --- http://host:port/web_app/users/1000
+@GetMapping(value="/users/{userId}")
+public User findUser(@PathVariable int userId) {
+ User user = userService.findUser(userId);
+ return user;
+}
+The URI Template "/users/{userId}" specifies the variable name userId. When the controller handles this request, the value of userId is set to the value found in the appropriate part of the URI.
+
+
+
+2. The @ResponseBody annotation is used to marshall(serialize) the return value into the HTTP response body. Spring comes with converters that convert the Java object into a format understandable for a client(text/xml/json) 
+where -- on the ret type of request handling methods
+eg :
+@Controller 
+@RequestMapping("/employee")
+public class EmpController
+{
+   @GetMapping(....)
+   public @ResponseBody Emp fetchEmpDetails(....int empId)
+   {
+      //get emp dtls from DB
+      return e;
+   }
+}
+OR
+@RestController  = @Controller (at the cls level) + @ResponseBody auto added on  the ret type of request handling methods
+
+
+3.The @RequestBody annotation, instead, unmarshalls the HTTP request body into a Java object injected in the method.
+
+
+## What is a web service ?
+
+Integral part of SOA (service oriented architecture)
+service = Business functionality to be exported to remote clnts via standard protocols(HTTP/s)
+server -- service provider
+clnt --service accessor
+
+Why -- To export the Business logic (functional logic --banking, customer service, payment gateway ,  stock exchange server BSE , NSE ...) to remote clients over standard set of protocols.
+
+Its equivalent to Java RMI (remote method invocation)
+In Java RMI -- java clnt object can directly invoke the remote method (hosted on the remote host) & get n process results. (i.e it gives you location transperency)
+BUT Java RMI ---is 100% java solution.
+There is no inter operability in that(i.e its a technologoy specific soln)
+How to arrive at technology inde soln ?
+
+CORBA --- Common obj request borker architecture
+tough to set up. (IDL ---i/f def language)
+Better alternative --- web services
+In 2002, the World Wide Web consortium(W3C) had released the definition of WSDL(web service definition language) and SOAP web services. This formed the standard of how web services are implemented.
+Earlier (J2EE 1.4 ) -- JAX-RPC
+Java API for XML based remote procedure calls
+Today replaced by JAX-WS
+
+In 2004, the web consortium also released the definition of an additional standard called RESTful. Over the past couple of years, this standard has become quite popular. And is being used by many of the popular websites around the world which include Facebook and Twitter.
+
+Corresponding J2EE specification  JAX RS
+
+JAX WS -- Java API for XML based web services -- Based upon 
+Protocol --SOAP -- simple object access protocol (runs over HTTP)
+Has additional header & message format .
++ Have to set up Naming service (UDDI --Universal Description, Discovery, and Integration) 
++ Have to set up WSDL (web service def. language)-- xml based web service def lang.
+--supports only XML as data exchange format.
+
+Too much to set up & eats up larger bandwidth !!
+So a simple soln is JAX RS -- Java API for RESTful web service
+JAX RS --- is a part of J2EE specifications
+Known Vendors --Apache , JBoss 
+& products --RESTeasy,Apache CXF
+BUT it's still difficult to set up.
+So spring , being integration master , comes to the rescue.....
+
+Refer to -- Regarding REST & REST simplified.
+
+Create restful service project  
+Test it with postman
+Write its clnt as another spring MVC web appliation.
+
+
+
+For spring restful web service provider 
+jars --spring-web-hib + json jars 
+
+For spring restful web service client --actually only spring web mvc , hibernate validator & json jars are sufficient.
+
+Server side steps
+
+1. Create Spring Web MVC application
+2. The layers --service --dao--pojo --DB are the same.
+3. In controller layer , replace @Controller by @RestController annotation, at class level.
+4. Request Handling methods will respond to different HTTP methods
+(get/post/put/delete)
+
+5. For method=get
+
+Can directly return either a resource eg : Person,BankAccount or Customer or still better is can return entire HTTP response encapsulated in ResponseEntity<T>
+
+What is o.s.http.ResponseEntity<T> 
+Represents  HTTP  response entity, consisting of status,headers and body.
+
+Constructors
+1. public ResponseEntity(T body,HttpStatus statusCode)
+Create a new ResponseEntity with the given body and status code, and no headers.
+2.public ResponseEntity(T body,MultiValueMap<String,String> headers,                 HttpStatus statusCode)
+Create a new ResponseEntity with the given body and status code, and headers.
+
+1. In the controller's get handling method 
+1. In @RequestMapping(value = "add uri with template variables")
+Return type of the method  = either a resource or resource embedded in the ResponseEntity.
+
+eg:@RequestMapping(value = "/cust/{id}")
+	public Customer getCustomer(@PathVariable int id) {
+//access id & invoke service layer method
+}
+
+2. Use service layer to fetch a resource.
+3. Return it to the client.
+
+2. In the controller's post handling method 
+1. In @PostMapping(value = "uri")
+Add @RequestBody annotated method argument
+Return type of the method  = either a resource or resource embedded in the ResponseEntity.
+eg :
+@RequestMapping(value = "/cust", method = RequestMethod.POST)
+	public ResponseEntity<Customer> createCustomer(@RequestBody Customer c) {
+    //invoke service layer method
+}
+
+3. Use service layer to create a resource.
+3. Return it to the client.
+
+
+Client side API for RESTful client
+
+Starting point --o.s.web.client.RestTemplate
+Main class for synchronous(BLOCKING) client-side HTTP access.
+It simplifies communication with HTTP servers using  RESTful principles.
+It handles HTTP connections.
+
+You have to provide URLs (with possible template variables) and extract results.
+The RestTemplate is similar to other Spring templates such as JmsTemplate and JdbcTemplate in that Spring eliminates a lot of boot strap code and thus makes your code much cleaner.  When applications use the RestTemplate they do not need to worry about HTTP connections, that is all encapsulated by the template. They also get a range of APIs from the RestTemplate which correspond to the well know HTTP methods (GET, PUT, POST, DELETE, HEAD, OPTIONS).  These APIs are overloaded to cater for things  like different ways of passing parameters to the actual REST API.
+
+
+
+1. For getting a single or multiple resources from the service provider.
+use HTTP method = get
+
+get API of org.springframework.web.client.RestTemplate
+
+ public <T> T getForObject(String url,Class<T> responseType,Object... urlVariables)
+ throws RestClientException
+T --type of the resource(result/POJO/DTO)
+ eg :BankAccount a= template.getForObject("http://localhost:7070/day12_rest_server/bank_accts/{ac_id}/{pin}",BankAccount.class,101,"1234");
+
+OR
+public ResponseEntity<T> T getForEntity(String url,Class<T> responseType,Object... urlVariables) throws RestClientException
+& then use getBody(),getHeaders(), getStatusCode() , to get complete details
+
+
+Can handle in catch block -- o.s.web.client.HttpClientErrorException
+& use getStatusCode() & 
+public String getResponseBodyAsString() --to get complete err details
+
+T  --response type expected from REST service.
+ eg: template.getForObject,("http://localhost:7070/rest_server/bank/accts/{id}/{pin}",BankAccount.class,101,"1234");
+
+1.5 getForObject can be replaced by getForEntity also , to get entire response consisting of status code, headers + body.
+
+How to avoid hard coding of REST URLs in your code ?
+
+1. Create a property file(map of key & value pairs) under <resources> & add REST URLs. No specific property file name.
+eg :
+REST_GET_URL=http://host:port/context path/resource/{var1}/{var2}/....
+REST_POST_URL=http://host:port/context path/resource
+
+2. Supply location of app properties file in master configuration file (spring-servlet.xml) --add util namespace.
+<util:properties id="props" location="classpath:/app.properties"/>
+
+3. In Rest Client , use SpEL(spring expression language) , to inject value of the property in url.
+eg : 
+@Value("#{props.REST_GET_URL}")
+private String getUrl;
+
+
+eg :
+RestTemplate API usage
+Customer c=template.getForObject(getrl, Customer.class, em,pass);
+			
+
+2. For creating a resource 
+use HTTP method = post
+post API of RestTemplate
+
+2.1 public <T> T postForObject(String url,Object request,Class<T> responseType,
+Object... uriVariables) throws RestClientException
+
+url - the URL
+request - the Object to be POSTed, may be null
+responseType - the type of the return value
+uriVariables - the variables to expand the template
+Returns:
+the created object
+
+Creates a new resource by POSTing the given object to the URI template, and returns the resource found in the response.
+
+url - the URL
+request - the Object to be POSTed, may be null
+responseType - the type of the return value
+uriVariables - the variables to expand the template
+Returns:
+the converted object
+: 
+eg :
+Customer c =template.postForObject(uri, c1, Customer.class);
+			
+3. For Updating a resource
+public void put(String url,Object request,Object... urlVariables)
