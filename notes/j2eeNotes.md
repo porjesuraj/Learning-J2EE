@@ -8,14 +8,16 @@
 5.   Naming Services,
 6.   Java Annotations,
 7.    Java Mail,
-8.     Java Messaging Services,
-9.     Transactions, 
-10.    Apache maven, 
-11.    Introduction to hibernate,
-12.     HQL,
-13.      Hibernate, 
-14.      Spring Framework, 
-15.      Hands on Web services – JSON/XML/oData (data format conversation)
+8.   Java Messaging Services,
+9.   Transactions, 
+10.  Apache maven, 
+11.  Introduction to hibernate,
+12.  HQL,
+13.   Hibernate, 
+14.   Spring Framework, 
+15.   Hands on Web services – JSON/XML/oData (data format conversation)
+
+--- 
 
 # Day 1 
 
@@ -44,7 +46,8 @@
 4. So the reason for making the HttpServlet class abstract is to prevent a  programming error.
 - As a servlet developer , you can choose to override the functionality of your requirement (eg : doPost) & ignore other methods. 
 
-## notes 
+## Notes 
+
 ### Version Java EE 8 (J2EE 1.8) maintained under Oracle  / Jakarta EE 8 (maintained by eclipse foundation)
 
 1. What is J2EE ?
@@ -210,6 +213,141 @@ eg URL --http://host:port/day1_web/hello
 
 
 # Day2 
+
+## Today's topics
+HttpSession based session tracking
+Complete BookShop case study
+Complete life cycle of servlet.
+ServletConfig Vs ServletContext
+Singleton instance of DB connection
+
+
+## First Revise
+Why session tracking ?
+1. To remember the clnt's conversational state(eg :cart, bank account , reservation...)from succesful login ---logout
+2. To identify client across multiple clients
+
+
+Techniques ?
+1. plain cookie based tech ---cookies are managed completely by servlet/JSP prog
+Steps
+1.1 create a cookie
+Cookie c1=new Cookie(nm,val);//string,string
+1.2 send the cookie to clnt , in resp hdr (set-cookie)
+response.addCookie(c1);
+
+1.3 clnt browser chks --
+privacy settings
+disabled --- session tracking fails
+enabled -- chks age
+-1 => def age --- transient cookie --cache
+0 => delete cookie
+> 0 => secs --- persistent --stored on clnt side h/d folders
+
+Solve
+eg : rem server IP address is  --ip1 
+In web app(/day3.1) --- /s1(is a servlet) ---
+Creates a  cookie  --- name --"clnt_info" , value --"details1234"
+
+clnt IP adr--  ip2
+
+1.4 Will Clnt browser of ip2  send the cookies in request header ?
+
+1. clnt sends the URL --- http://ip3:8080/.....NOT sent (since different Host IP adr)
+2. clnt sends the URL --- http://ip1:8080/day2/....  NOT sent (since different web app)
+3. clnt sends the URL --- http://ip1:8080/day3.1/s2 : SENT (same host , same web app/web site)
+4. clnt sends the URL --- http://ip1:8080/day3.1/s10 : SENT (same host , same web app/web site)
+
+Default behaviour
+Can be modified by Cookie class methods : setPath , setDomain
+
+1.5 How to access clnt info from the  cookies ? (nm : clnt_info)
+Cookie[]  cookies=request.getCookies();
+if(cookies != null)
+ for(Cookie c : cookies)
+  if(c.getName().equals("clnt_info"))
+   c.getValue() .....
+
+1.5 limitations of cookie based approach
+1. only text data.
+2. inced no of cookies ---> inced net traffic
+3. servlet prog has to manage cookies
+4. Where is clnt's state stored : -- clnt side in form of a cookie
+Cookies are deleted or rejected --entire session tracking fails
+
+2. Session tracking based upon HttpSession i/f (from package : javax.servlet.http)
+ 
+Major change -- WC manages cookie(creates, adds , retrieval)
+1 cookie
+(nm -- JSESSIONID , val --unique long string val generated per clnt by WC)
+
+Clnt state is no longer saved on clnt side , instead saved on server side(within HttpSession obj)
+One can store/restore java objs directly under the session scope(setAttribute/getAttribute/removeAttribute/getAttributeNames)
+
+dis adv --- session tracking fails when cookies are disabled.(since key to HS object is still sent to the clnt as a cookie --
+name -- JSESSIONID
+value -- WC generated unique string(Pseudo random no generation protocol) / clnt.)
+
+What is attribute?
+server side object
+entry = mapping =key n value pair
+key = attribute name ---String
+value = attr value -- java.lang.Object
+who creates it ? servlet dev -- setAttribute(nm,val)
+scope --request | session | application
+
+eg : session.setAttribute("emp_salary",12345.78);//double ---> Double ---> Object
+
+What is the scope of such attrs ?
+eg :
+HttpSession hs=request.getSession();
+hs.setAttribute(nm,val); life time setAttr -------hs.invalidate() / session expiration tmout(30 mins for tomcat)
+
+Session scoped attr will be shared between : multiple requests , coming from SAME client , for SAME web app
+
+def session tmout value for Tomcat = 30 mins
+How to change session tmout ?
+HttpSession  i/f method
+public void setMaxInactiveInterval(int secs)
+eg : hs.setMaxInactiveInterval(300); --session tmout for 5 mins .
+OR via xml tags
+
+After either invalidate/tmout ,  What will happen ?
+1. HS object is marked for GC from server side heap
+2. jsesssionid cookie is deleted form clnt browser.
+3. none
+4. both 
+Ans : 
+
+
+Steps
+1. HttpSession hs=request.getSession(); //new or exsisting 
+2. Set Attribute  saving attrs under session scope
+3. How to get attribute from HS scope ?
+getAttribute(nm) -- val (Object)
+4. logout page 
+hs.invalidate(); --HS GCed.
+----------------------------------
+Complete case study
+Completion till DAO
+Table : dac_books
+POJO : Book 
+IBookDao
+1. List<String> getAllCategories() ....
+2. List<Book> getBooksByCategory(String catName) ...
+3. Book getBookDetailsById(int bookId)...
+
+
+Design servlets n test the same.
+
+1. URL
+http://localhost:8080/day3.1/category_details?cat_name=angular
+
+http://localhost:8080/day3.1/add_to_cart?book_id=5&book_id=6
+
+
+
+
 
 ## Page Navigation Techniques
 - Page Navigation=Taking user from 1 page to another page.
@@ -431,7 +569,7 @@ Attributes can exist in one of 3 scopes --- req. scope,session scope or applicat
 
 
 # Day3
-
+- in day 2 notes
 
 
 # Day4 
@@ -3890,8 +4028,10 @@ Date creation_date=sdf.parse(request.getParameter("creation_date"));
 > http://host:port/spring_mvc/user/logout;jsessionid=egD5462754
 
 9. OR form action example
-> eg : <form action="<spring:url value='/admin/list'/>"> .....</form>
-
+- eg :
+```java
+ <form action="<spring:url value='/admin/list'/>"> .....</form>
+```
 10.  From Logout , ending session two option
 - 1. Discard session
 - 2. Forward the client to logout.jsp
@@ -4073,14 +4213,14 @@ Installation (w/o IDE)
 
 ## Problems with traditionals/legacy spring
 
-We use different modules from spring such as core module, to do dependency injection.The MVC module to develop the web layer for our application or even the restful web services layer.And then the DAO layer where we use the spring JDBC/ORM which makes our life easy to develop a data access layer for our application. When we are using ORM tools like Hibernate, we can use spring data JPA and we use these modules and more that are valuable from Spring.
+1. We use different modules from spring such as core module, to do dependency injection.The MVC module to develop the web layer for our application or even the restful web services layer.And then the DAO layer where we use the spring JDBC/ORM which makes our life easy to develop a data access layer for our application. When we are using ORM tools like Hibernate, we can use spring data JPA and we use these modules and more that are valuable from Spring.
 
-Initially we used XML based configuration or annotations based configuration,This configuration can get difficult and hard to maintain over time.And also we need to make sure that each of these modules is available for our application by defining all the dependencies in the Maven pom xml.And at runtime we have to be sure that these versions of various Modules that we use are compatible with each other.But it's our responsibility to do all that, and once we have all that in place we will build our application and will have to deploy to an external web container to test it .
+2. Initially we used XML based configuration or annotations based configuration,This configuration can get difficult and hard to maintain over time.And also we need to make sure that each of these modules is available for our application by defining all the dependencies in the Maven pom xml.And at runtime we have to be sure that these versions of various Modules that we use are compatible with each other.But it's our responsibility to do all that, and once we have all that in place we will build our application and will have to deploy to an external web container to test it .
 
 Spring boot will automate all this for us.
 
- What are Spring Boot Features ?
-
+ 3. What are Spring Boot Features ?
+-
 1. The first of those super cool features is auto configuration - Spring Boot automatically configures everything that is required for our application. We don't have to use XML or annotation based or Java configuration anymore.
 
 For example if you are using Spring MVC or the web to develop a web application or a restful web service application spring boot will automatically configure the dispatcher servlet and does all the request mapping for us. We don't have to use any xml or annotation based configuration to configure this servlet.
@@ -4575,6 +4715,7 @@ For this ,  a DAO interface needs to extend the JPA specific Repository interfac
 By extending the interface we get the most required CRUD methods for standard data access available in a standard DAO.
 
 eg : CRUDRepository methods
+```java
 long 	count()
 Returns the number of entities available.
 void 	delete(T entity)
@@ -4592,12 +4733,12 @@ Returns all instances of the type.
 Iterable<T> 	findAllById(Iterable<ID> ids)
 Returns all instances of the type with the given IDs.
 Optional<T> 	findById(ID id)
-Retrieves an entity by its id.
-<S extends T>
+Retrieves an entity by its id. 
+> <S extends T>
 S 	save(S entity)
 Saves a given entity.
-<S extends T>
-Iterable<S> 	saveAll(Iterable<S> entities)
+> <S extends T>
+> Iterable<S> 	saveAll(Iterable<S> entities)
 Saves all given entities.
 
 Method of JpaRepository
@@ -4605,6 +4746,8 @@ void 	deleteAllInBatch()
 Deletes all entities in a batch call.
 void 	deleteInBatch(Iterable<T> entities)
 Deletes the given entities in a batch which means it will create a single Query.
+```
+```java
 List<T> 	findAll() 
 <S extends T>
 List<S> 	findAll(Example<S> example) 
@@ -4619,10 +4762,11 @@ Returns a reference to the entity with the given identifier.
 <S extends T>
 List<S> 	saveAll(Iterable<S> entities) 
 
+```
 
 
 3. Custom Access Method and Queries
-By extending one of the Repository interfaces, the DAO will already have some basic CRUD methods (and queries) defined and implemented.
+- By extending one of the Repository interfaces, the DAO will already have some basic CRUD methods (and queries) defined and implemented.
 
 To define more specific access methods, Spring JPA supports quite a few options:
 
@@ -4684,7 +4828,8 @@ Exception translation is still enabled by the use of the @Repository annotation 
 ```java
 @NotEmpty OR NotBlank
 	@Length(min=5,max=10)
-	@Email
+	@Email(message = "Invalid Email format")
+
 	private String email;
 	@NotEmpty
 	@Pattern(regexp="((?=.*\\d)(?=.*[a-z])(?=.*[#@$*]).{5,20})")
@@ -4694,7 +4839,9 @@ Exception translation is still enabled by the use of the @Repository annotation 
 	private double regAmt;
 	@NotNull
 	@DateTimeFormat(pattern="dd-MMM-yyyy")
-	private Date regDate;
+  private Date regDate;
+  
+
 ```
 
 ## Background of REST
@@ -5163,3 +5310,1589 @@ Customer c =template.postForObject(uri, c1, Customer.class);
 			
 3. For Updating a resource
 public void put(String url,Object request,Object... urlVariables)
+
+# Day 16 
+## Questions
+1.How to reject non default values during marshalling / un marshaling
+Ans : Use the annotation : over POJO class.
+@JsonInclude(Include.NON_DEFAULT)
+
+2. Solve for Spring Data JPA Practice
+
+1. List a product having supplied name
+name : via URI variable
+
+
+2.List products whose description contains supplied pattern
+pattern : via URI variable
+
+3. List all products with date of expiry after a specific date
+Date should be supplied as URI variable from front end.
+
+
+4 List all products with price in the range of begin n end
+begin n end  should be supplied as request parameters.
+
+5. Later : After spring -angular integration
+One to Many 
+Product 1<----->*Order
+Order :orderId , date,quantity,totalAmount
+Demo of : @Query , @JsonIgnoreProperties
+
+6. Complete CRUD for Product Management app.
+6.1 Add a new product
+post 
+front end : JSON representation of a product(transient)
+back end : un marshalling : @RequestBody : method argument of request handling methods annotated with : @PostMapping n @PutMapping
+
+6.2 Update Existing product
+put
+front end : JSON representation of a product(detached)
+back end : un marshalling : @RequestBody : method argument of request handling methods annotated with :  @PutMapping
+
+6.3 Delete existing product
+delete
+front end : product id : path variable
+back end : rets void in case of product is deleted or HTTP 404 : in case if not found
+
+
+7. Test it with Postman n later with angular
+
+
+3. Distributing the application
+3.1 REST project with JAR (eg project : spring-boot-validations)
+R click on project --Run as --Maven Build --add goal as install -- run.
+It will create a JAR file (with name as artifact-id.version)
+From cmd line , invoke 
+java -jar NameOfJar
+
+4. Spring AOP : exam objective
+refer to : AOP 
+
+4.5 OSIV : anti pattern
+Later with one-to-many scenario
+
+6. Many to Many
+Student n Course Example
+Copy pojos from : day10.1 project n modify
+(use different database : sunbeam2)
+
+7.JSP Custom tags
+In web app : add custom tag
+eclipse project :day10_assgnment
+
+Steps 
+0. Identify tag exec logic
+1.1 Create a custom tag class : extending from javax.servlet.jsp.tagext.SimpleTagSupport
+must override : doTag to supply tag exec logic
+1.2 Create TLD : Tag lib descriptor (xml): to describe your custom to WC : so that WC can start managing custom tag life cycle.
+eg : 
+<tag>
+    <name>tag-suffix</name>
+    <tag-class>F.Q Tag handler class name</tag-class>
+    <body-content>empty</body-content>
+  </tag>
+1.3 Import custom tag lib.(taglib directive)
+
+1.4 Invoke the tag
+
+1.5 Initiall write it to test custom tag
+
+1.6 Use it for invalidating the session.
+
+
+8. Customizations in @Transactional annotation
+refer to : "regarding transactions.txt"
+refer to articles by Vlad : Reading H.W
+day14-data\day14_help\transactions_n_locking
+
+To observe lost update problem : eclipse project : hibernate_optimistic_locking
+refer to "regarding transactions_locking.txt"
+Run AddStock
+PurchaseStocks
+StockEscalation
+
+9. Inheritance in Hibernate
+refer to readme
+eclipse projects : hibernate_inheritance , hibernate_inheritance2
+
+10.  Caching
+eclipse projects : hibernate_cache
+
+
+## Question 2
+Eclipse project : spring-boot-validations
+Run the project . "employees" table will be created.
+Insert data
+insert into employees values (default,'Mumbai',10,'manager','1990-1-1','Rama',23456);
+insert into employees values (default,'Mumbai',10,'sd','1997-1-1','Shekhar',15000);
+
+Objective 1. : Adding global / centralized exception handler
+Problem : Access REST end point : http://localhost:8080/emps/123
+(i.e non existing emp id)
+Observation : Complete error stack on front end .
+Can be avoided by catching the exception in RestController , but then will have to supply multiple repeatative exc handling code.
+
+How to add global(centralized) exception handler ?
+Using 2 Annotations 
+
+ @ControllerAdvice & @ExceptionHandler
+
+@ControllerAdvice is a specialization of the @Component annotation which allows to handle exceptions across the whole application in one global handling component. 
+
+It's  interceptor of exceptions thrown by methods annotated with @RequestMapping and similar.
+
+Add  in this class , @ExceptionHandler methods to be shared across multiple @Controller classes.
+
+Typically extend this global exc handler by ResponseEntityExceptionHandler
+
+What is it ?
+A convenient base class for @ControllerAdvice classes  to provide centralized exception handling across all @RequestMapping methods through @ExceptionHandler methods.
+This base class provides an @ExceptionHandler method for handling internal Spring MVC exceptions. This method returns a ResponseEntity for writing to the response with a message converter,
+
+@ExceptionHandler : method level annotation.
+
+Steps :
+1. Create a class that extends from ResponseEntityExceptionHandler
+2. Add class level annotation @ControllerAdvice
+3. Add @ExceptionHandler methods , to handle different type of exceptions.
+
+
+2.Objective  Add P.L Validations supplied in back end
+Steps
+2.1
+IMPORTANT NOTE : From spring boot 2.3 onwards : add validation starter dependency explicitly to add validation support.
+<dependency>
+ <groupId>org.springframework.boot</groupId>
+ <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+
+2.2  Identify validation rules , add these annotations on POJO properties.
+eg : @NotBlank, @Pattern, @Min, @Max...
+Imported form javax.validation , org.hibernate.validator
+
+2.3 For validating RequestBody : add @Valid annotation in addition to @RequestBody
+SC performs un marshalling + validation
+
+2.4 Comment ControllerAdvice
+
+2.5 Invoke REST end point (post)
+URL : http://localhost:8080/emps/
+raw json body : 
+{
+    
+    "name": "Sheela",
+    "salary": 6000.0,
+    "dob": "1995-01-01",
+    "designation": "sd",
+    "deptId": 20,
+   
+}
+
+Observation : HTTP status 400 , BUT entire error stack trace sent to clnt.
+Exc : MethodArgumentNotValidException
+Better option : 
+For handling Spring MVC validation errors : extend exception handler class from ResponseEntityExceptionHandler & override
+protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,HttpHeaders headers,HttpStatus status,WebRequest request)
+
+
+3. For Path Variables/request params : @Validated , at class level on controller class.
+Exception raised : ConstraintViolationException
+
+4. Any remaining exceptions , handle it by a common handler method. 
+
+
+## Inheritance is one of the fundamental design principles in OOP. BUT relational databases don’t support inheritance 
+
+JPA suggests different strategies to support inheritance hierarchies. 
+
+Hibernate Inheritance strategies
+1 Single Table Strategy
+This is typically the best inheritance strategy. In this strategy, whole inheritance hierarchy’s data is stored in a single table. A discriminator column is used to determine to which class the row belongs.
+Annoations used in super class
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "emp_type")
+@Table(name = "employees")
+public class Employee {....}
+
+In sub class : 
+@Entity
+@DiscriminatorValue("worker")
+public class Worker extends Employee {..}
+
+2. Joined Table Strategy
+This is the most logical solution, as it mirrors the object structure in the database. In this approach, a separate database table is defined for each of the class in the hierarchy and each table stores only its local attributes. Along with attribute, each table should have an id column and the id is defined in the parent table.
+
+In super class 
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "emp_type")
+@Table(name = "employees")
+public class Employee {...}
+
+In sub class 
+@Entity
+@DiscriminatorValue(value = "mgr")
+@PrimaryKeyJoinColumn(name = "emp_id")
+public class Manager extends Employee {....}
+
+
+
+## Aspect Oriented Programming(AOP)
+
+WHY 
+
+Separating  cross-cutting concerns(=repeatative tasks) from the business logic .
+
+IMPORTANT
+
+The key unit of modularity in OOP is the class, whereas in AOP the unit of modularity is the aspect. Dependency Injection helps you decouple your application objects from each other(eg : Controller separate from Service or DAO layers)  and AOP helps you decouple cross-cutting concerns from the objects that they affect.(eg : transactional code or security related code can be kept separate from B.L or exception handling code from request handling method)
+eg of ready made aspects provided by SC : tx management,security , exc handling 
+
+
+eg scenario -- 
+
+Think of a situation  Your manager tells you  to do your normal development work(eg - write stock trading appln) +  write down everything you do and how long it takes you. 
+
+
+A better situation would be you do your normal work, but another person observes what youre doing and records it and measures how long it took.
+
+
+
+Even better would be if you were totally unaware of that other person and that other person was able to also observe and record , not just yours but any other peoples work and time.  
+
+That's separation of responsibilities.   --- This is what spring offers you through AOP.
+
+
+It is NOT an alternative to OOP BUT it complements OOP.
+
+The key unit of modularity in OOP is the class, whereas in AOP the unit of modularity is the aspect. 
+Aspects enable the modularization of concerns.(concern=task/responsibility) such as transaction management,logging,security --- that cut across multiple types and objects. (Such concerns are often termed crosscutting concerns in AOP jargon)
+
+Enables the modularization of cross cutting concerns(=task)
+Eg : Logging,Security,Transaction management, Exception Handling
+
+Similar in functionality to ---In EJB framework -- EJBObject 
+Struts 2 -- interceptors 
+Servlet -- filters.
+RMI -- stubs
+Hibernate --- proxy (hib frmwork -- lazy --- load or any--many associations --rets typically un-inited proxy/proxies)
+
+
+
+AOP with Spring Framework
+
+One of the key components of Spring Framework is the Aspect oriented programming (AOP) framework. 
+
+Like DI, AOP supports loose coupling of application objects.
+
+ The functionalities  that span multiple points of an application are called cross-cutting concerns.
+
+With AOP, applicationwide concerns(common concerns-responsibilities or cross-cutting concerns like  eg - declarative transactions , security,logging,monitoring,auditing,authentication....)
+are decoupled from the objects to which they are applied.
+
+Its better for  application objects(service layer) to focus on the business domain problems theyre designed for and leave certain ASPECTS to be handled by someone else.
+
+Job of AOP framework is --- Separating these cross-cutting concerns(repeatative tasks) from the core business logic 
+
+
+AOP is like triggers in programming languages such as Perl, .NET.
+
+Spring AOP module provides interceptors to intercept an application, for example, when a method is executed, you can add extra functionality before or after the method execution.
+
+----------------------------------
+Key Terms of AOP
+
+Advice : Action(=cross cutting concern) to take either before/after or around the method (B.L) execution.  eg: transactional logic(begin tx,commit,rollback)
+
+Advice describes  WHAT is to be done & WHEN it's to be done.
+
+
+eg :  logging. It is sure that each object will be using the logging framework to log the event happenings , by calling the log methods. So, each object will have its own code for logging. i.e  the logging functionality requirement is spread across multiple objects (call this as Cross cutting Concern, since it cuts across multiple objects). Wont it be nice to have some mechanism to automatically execute the logging code, before executing the methods of several objects? 
+
+
+2. Join Point : Place in application WHERE  advice should  be applied.(i.e which B.L methods should be advised)
+(Spring AOP,  supports only method execution  join point )
+
+3. Pointcut : Collection of join points.
+It is the expression used to define when a call to a method should be intercepted. I
+eg :
+@Pointcut("execution (Vendor com.app.bank.*.*(double))")
+advice logic{....}
+
+4. Advisor  Group of  Advice and Pointcut into a single unit.
+
+
+5. Aspect : class representing advisor(advice logic + point cut definition)-- @Asepct -- class level annotation.
+
+6. Target : Application Object containing Business logic.(To which advice gets applied at specified join points) --supplied by Prog
+
+7. Proxy : Object created after applying advice to the target object(created by SC dynamically by implementing typically service layer i/f) ---consists of cross cutting concern(repeatative jobs , eg : tx management,security)
+
+8.Weaving -- meshing(integration) cross cutting concern around B.L
+(3 ways --- compile time, class loading time or spring supported --dynamic --method exec time or run time)
+
+Examples of readymade aspects  :
+Transaction management & security.
+
+Types of Advice --appear in Aspect class
+
+@Before  : This advice (cross cutting concern) logic gets Executed only before B.L method execution.
+@AfterReturning  Executes only after method returns in successful manner
+@AfterThrowing - Executes only after method throws exception
+@After -- Executes always after method execution(in case of success or failure)
+@Around -- Most powerful, executes before & after.
+
+Regarding pointcuts
+Sometimes we have to use same Pointcut expression at multiple places, we can create an empty method with @Pointcut annotation and then use it as expression in advices.
+
+eg of PointCut annotation syntax
+
+@Before("execution (* com.app.bank.*.*(..))")
+
+@Pointcut("execution (* com.app.bank.*.*(double))")
+
+// point cut expression
+@Pointcut("execution (* com.app.service.*.add*(..))")
+	// point cut signature -- empty method .
+	public void test() {
+	} 
+eg of Applying point cut 
+1. @Before(value = "test()")
+public void logBefore(JoinPoint p) {.........}
+
+2. 
+@Pointcut("within(com.app.service.*)")
+    public void allMethodsPointcut(){}
+
+@Before("allMethodsPointcut()")
+    public void allServiceMethodsAdvice(){...}
+
+3.
+@Before("execution(public void com.app.model..set*(*))")
+ public void loggingAdvice(JoinPoint joinPoint){pre processing logic ....}
+
+4.  //Advice arguments, will be applied to bean methods with single String argument
+    @Before("args(name)")
+    public void logStringArguments(String name){....}
+
+5. //Pointcut to execute on all the methods of classes in a package
+    @Pointcut("within(com.app.service.*)")
+    public void allMethodsPointcut(){}
+    
+6.@Pointcut("execution(* com.core.app.service.*.*(..))") // expression 
+private void meth1() {}  // signature
+
+7.@Pointcut("execution(* com.app.core.Student.getName(..))") 
+private void test() {}
+
+
+Steps in AOP Implementation
+1. Create core java project.
+2. Add AOP jars to runtime classpath.  
+3. Add aop namespace to spring config xml.
+4. To  Enable the use of the @AspectJ style of Spring AOP & automatic proxy generation, add <aop:aspectj-autoproxy/>
+5. Create Business object class. (using stereotype anotations)
+6. Create Aspect class, annotated with @Aspect & @Component
+7. Define one or more point cuts as per requirement
+Eg of Point cut definition.
+@PointCut("execution (* com.aop.service.Account.add*(..))")
+public void test() {}
+OR
+@Before("execution (* com.aop.service.Account.add*(..))")
+public void logIt()
+{
+   //logging advice code
+}
+
+Use such point cut to define suitable type of advice.
+
+
+Test the application.
+
+
+execution --- exec of B.L method
+
+eg : @Before("execution (* com.app.bank.*.*(..))")
+public void logIt()  {...}
+Above tell SC ---- to intercept ---ANY B.L method ---
+having ANY ret type, from ANY class from pkg -- com.app.bank
+having ANY args 
+Before its execution.
+
+
+Access to the current JoinPoint
+
+Any advice method may declare as its first parameter, a parameter of type org.aspectj.lang.JoinPoint (In around advice this is replaced by ProceedingJoinPoint, which is a subclass of JoinPoint.) 
+
+The org.aspectj.lang.JoinPointJoinPoint interface methods
+1. Object[] getArgs()  -- returns the method arguments.
+2. Object  getThis() --returns the proxy object
+3  Object  getTarget() --returns the target object
+4. Signature getSignature() -- returns a description of the method that is being advised
+5. String  toString() -- description of the method being advised
+
+
+
+ 
+
+## Transaction
+- Understanding hibernate-persistence.xml & tx management
+1. Supply the location of DB property file .
+<context:property-placeholder 
+location="classpath:/database.properties" />
+2.Configure a spring bean , to create Apache supplied connection pool.
+I/F --javax.sql.DataSource (represents Connection pool)
+Imple class --Apache supplied --org.apache.commons.dbcp2.BasicDataSource
+Inject CP properties via setter Based D.I
+
+3. Configure SessionFactory bean , supplied by Spring.
+i/f --org.hibernate.SessionFactory (hibernate supplied)
+SF provider -- o.s.orm.hibernate5.LocalSessionFactoryBean
+Inject SF properties via setter Based D.I
+eg : packgesToScan, show_sql , hbm2ddl.auto
+Inject the ref of CP bean into SF
+
+4. Configure spring supplied tx manager bean , to automate tx management(using @Transactional)
+I/F : o.s.transaction.PlatformTransactionManager
+Implementation class --o.s.orm.hibernate5.HibernateTransactionManager
+
+5. Enable annotation based tx supprt
+<tx:annotationDriven/>
+4. Understanding Transaction Management in Spring
+
+How to automate Tx management in spring?
+1. Add spring supplied tx manager bean in config file
+<bean id="transactionManager" 		class="org.springframework.orm.hibernate5.HibernateTransactionManager"
+p:sessionFactory-ref="sessionFactory">
+</bean>
+2.  Enable tx annotation support
+	<tx:annotation-driven />
+
+3. Use @Transactional attribute typically in Service or DAO Layer.
+
+4. How to customize tx management -- using @Transactional attributes
+4.1 timeout
+eg : @Transactional(timeout=100)
+service/dao layer method/class
+4.2 readOnly -- 
+def value --false;
+eg : @Transactional(readOnly=true)
+4.3 
+@Transactional(rollbackFor = IOException.class, noRollbackFor = RuntimeException.class)
+public void doSomething(...)
+
+4.4 Tx propagation level
+
+4.5 Tx isolation level
+
+
+##  Transactions & Locking
+1. Change tx isolation level --to REPEATABLE_READ
+OR 
+2 Use "select for update" Query
+Both of above approach applies a write lock
+
+Better approach --Optismistic Locking
+
+Problem : Lost Updates
+
+If two transactions are updating different columns of the same row, then there is no conflict. The second update blocks until the first transaction is committed and the final result reflects both update changes.
+
+If the two transactions want to change the same columns, the second transaction will overwrite the first one, therefore loosing the first transaction update.
+
+So an update is lost when a user overrides the current database state without realizing that someone else changed it between the moment of data loading and the moment the update occurs.
+
+JPA 2 supports both optimistic locking and pessimistic locking. Locking is essential to avoid update collisions resulting from simultaneous updates to the same data by two concurrent users. Locking in  JPA) is always at the database object level, i.e. each database object is locked separately.
+
+Optimistic locking is applied on transaction commit. Any database object that has to be updated or deleted is checked. An exception is thrown if it is found out that an update is being performed on an old version of a database object, for which another update has already been committed by another transaction.
+
+Optimistic locking should be the first choice for most applications, since compared to pessimistic locking it is easier to use and more efficient.
+
+In the rare cases in which update collision must be revealed earlier (before transaction commit) pessimistic locking can be used. When using pessimistic locking, database objects are locked during the transaction and lock conflicts, if they happen, are detected earlier.
+
+Optismistic Locking 
+Add @Version annotated property in hibernate POJO.(data type Integer)
+
+ The initial version of a new entity object (when it is stored in the database for the first time) is 1. In every transaction in which an entity object is modified its version number is automatically increased by one. 
+
+During commit , hibernate checks every database object that has to be updated or deleted, and compares the version number of that object in the database to the version number of the in-memory object being updated. The transaction fails and an OptimisticLockException is thrown if the version numbers do not match, indicating that the object has been modified by another user (using another transaction) since it was retrieved by the current updater.
+
+
+Pessimistic Locking
+The main supported pessimistic lock modes are:
+
+PESSIMISTIC_READ - which represents a shared lock.
+PESSIMISTIC_WRITE - which represents an exclusive lock.
+
+Setting a Pessimistic Lock
+
+An entity object can be locked explicitly by the lock method:
+org.hibernate.Session API
+void lock(Object object,LockMode lockMode)
+
+Obtain the specified lock level upon the given object. This may be used to perform a version check (LockMode.READ) or to upgrade to a pessimistic lock (LockMode.PESSIMISTIC_WRITE)
+
+eg : 
+  sf.getCurrentSession().lock(employee, LockMode.PESSIMISTIC_WRITE);
+
+## Why Custom Tags.....
+When JSP 2.x std actions or JSTL actions are in-sufficient to solve B.L w/o writing scriptlets --- create your own tags & use them
+
+For separation ---
+Supply B.L in custom tags & JSP can invoke the custom tags using WC
+
+Steps for creation of Custom Tags 
+1. Identify the Business logic(tag execution logic) & encapsulate the same in TagHandler class.
+Custom Tag Handlers can be created using javax.servlet.jsp.tagext.SimpleTag ---i/f 
+API gives u the impl. class : SimpleTagSupport . 
+
+As a tag dev : extend from  SimpleTagSupport . 
+Must override :
+public void doTag() throws IOExc,JSPExc : represents the tag exec. logic.
+
+Current objective : Generate a Hello msg from the custom tag. (1st tag will be w/o attrs & without body)
+
+How to get the JSPWriter inst : connected to clnt browser : from inside the Tag class?
+API :  inside : doTag....
+getJspContext()  ---> JsPContext (env. of the JSP : impl. objs avlbl to JSP , whichever has invoked this tag)
+On JSPContext : to get JSPWriter 
+JspWriter getOut() 
+& then invoke : out.println(dyn cont.)
+
+2. Describe the tag to W.C : so that W.C can manage the life-cycle of the tag.
+
+Creating : TLD (Tag library descriptor : .tld : xml syntax)
+copy the template : ur web-appln's : web-inf\tlds\example.tld
+eg :
+ <tag>
+    <name>welcome</name> : tag suffix 
+    <tag-class>cust_tags.MytagHandler</tag-class> : F.Q class name
+    <body-content>empty</body-content> : no body supported by the tag + no attrs.
+  </tag>
+
+3. Invoking the custom tag from the JSP
+3.1  Import the TLD : which contains the description of  custom tags
+<%@ taglib uri="URI of the TLD" prefix="tag prefix" %>
+3.2 Invoke the tag
+eg : <my:hello/>
+
+Life-cycle of the custom Tag 
+ Ref to JEE -- apidoc---javax.servlet.jsp.tagext.SimpleTag ---i/f
+
+SimpleTag : i/f ----contains the desc of the life cycle.
+
+1. W.C will invoke tag life cycle -- when JSP invoke tag.(eg : <ex:hello/>
+2.WC locates TLD (using taglib directive) 
+3. From TLD --- searches for matching tag suffix (under tag name)
+4. From tag name -- gets tag class --- locates/loads/instantiates tag class in WC's mem.
+5. WC invokes setJspContext(JspContext ctx) --- to pass the entire JSP page env(PageContext obj containing all impl objs) to the tag handler class.(mandatory)
+6.WC will invoke the setters for attributes (optional)
+7. WC will invoke setJspBody(JspFragment jspf) iff body content is non-empty.(optional)
+8.Finally WC invokes --- doTag()
+9. Upon returninng from doTag() --- WC GCs T.H class inst.
+
+
+body-content = empty =>W.C will skip handling of body-content.
+body-content = scriptless => WC will invoke setJspBody(JspFragment jspf) to pass tag body content to T.H class.
+allowed content types ---- plain text/HTML/std action/custom action
+How to retrieve & invoke body content from T.H class?
+From doTag ---
+1. get JspFragment (API --- getJspBody())
+2. To invoke JspFragment ----use API
+public abstract void invoke(Writer w)                   throws JspException,IOException
+if w=null --- o/p(contents) will be auto. sent to clnt browser.
+
+Objective : Create & test cust tag : to support body + attr
+<ex:test count="dyn expr">
+ HTML/Plain Text/custom action
+</ex:test>
+Expected o/p : Body -content should be displayed count no of times.
+
+
+Expected o/p : Body -content should be upper-cased & then displayed count no of times.
+
+
+Help for solving Custom Tag assignment --
+1. Create QueryTagHandler class ---extends SimpleTagSupport.
+2 Create private data members -- same name & type as attributes(eg - 2props -- dept & salary. ---provide setters.
+
+3.Override doTag
+--JspFragment jspf=getJspBody();
+  StringWriter sw=new StringWriter();
+  jspf.invoke(sw);
+  String query=sw.getBuffer().toString();
+  s.o.p(query);//confirm if u have got till body-content as query.
+  //append to the query -- where dept=? and salary=?
+ //invoke DAO class --- openCn,invokeQuery(query,dept,sal)
+ // DAO rets to cust tag -- AL<EmpPoJO>
+  //use for-each from doTag --- & display using out.println(empPojo) to clnt browser.
+//dao.closeConnection();
+---doTag() rets.
+
+
+Objective : remove scriptlet : for discarding session from logout.jsp
+Invoke JavaBean method from custTag
+
+
+# Day 17
+
+## Objective
+A1.JNDI : exam objective
+Refer to help
+
+2.Annotations in Java 
+day17-data\day17_help\java annotations\test_custom_annotation
+
+3. Tx management using @Transactional attribute
+Transaction Isolation
+Transaction propagation
+refer to readme : "transactions.txt"
+eclipse project : spring-boot-tx-propagation
+I/P 
+from postman : method=post
+http://localhost:8080/test
+
+
+4. JPA/Hibernate related 
+eclipse project : hibernate_optimistic_locking
+Named Queries 
+CriteriaQueries
+Native Sql : createSQLQuery(String queryString) (use case : executing stored procedure / function)
+
+5. Composite Primary Key 
+eclipse project : spring_hib_composite_pk
+
+5.5 Hibernate inheritance
+
+6. Unit Testing & Integration Testing in Spring Boot
+eclipse project : spring-boot-testing
+Contains a Smoke Test , unit tests & integration tests
+ 
+7.
+spring_boot_image_handling
+
+8. Sending Mail & I18N
+
+9. OSIV
+
+10 Spring Boot MVC with full CRUD operations
+(completed update operation)
+
+11. For remaining design patterns 
+refer : design-patterns\readme
+
+12. Refer to exam help.
+
+
+## Hibernate Inheritence
+Inheritance is one of the fundamental design principles in OOP. BUT relational databases don’t support inheritance 
+
+JPA suggests different strategies to support inheritance hierarchies. 
+
+Hibernate Inheritance strategies
+1 Single Table Strategy
+This is typically the best inheritance strategy. In this strategy, whole inheritance hierarchy’s data is stored in a single table. A discriminator column is used to determine to which class the row belongs.
+Annoations used in super class
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "emp_type")
+@Table(name = "employees")
+public class Employee {....}
+
+In sub class : 
+@Entity
+@DiscriminatorValue("worker")
+public class Worker extends Employee {..}
+
+2. Joined Table Strategy
+This is the most logical solution, as it mirrors the object structure in the database. In this approach, a separate database table is defined for each of the class in the hierarchy and each table stores only its local attributes. Along with attribute, each table should have an id column and the id is defined in the parent table.
+
+In super class 
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@DiscriminatorColumn(name = "emp_type")
+@Table(name = "employees")
+public class Employee {...}
+
+In sub class 
+@Entity
+@DiscriminatorValue(value = "mgr")
+@PrimaryKeyJoinColumn(name = "emp_id")
+public class Manager extends Employee {....}
+
+
+
+## What is JNDI ?
+ Java Naming and Directory Interface (JNDI) 
+J2EE API --- that provides naming and directory functionality to applications written using the Java. It is independent of any specific directory service implementation. 
+
+Thus variety of directories(new, emerging, and already deployed) can be accessed in a common way.
+
+What is its basic use?
+JNDI allows distributed applications to look up services in an abstract, resource-independent way.
+
+When it is used?
+The most common use case is to set up a database connection pool on a Java EE application/web  server. Any application that's deployed on that server can gain access to the connections they need using the JNDI name java:comp/env/myPool without having to know the details about the connection.
+
+Advantage
+
+Applications don't have to change as they migrate between environments.
+
+Refer to image
+
+Some of the common service providers
+
+Lightweight Directory Access Protocol (LDAP)
+Common Object Request Broker Architecture (CORBA) Common Object Services (COS) name service
+Java Remote Method Invocation (RMI) Registry
+
+So basically you create objects and register them on the directory services which you can later do lookup and execute operation on.
+
+JNDI Overview
+
+JNDI is an API specified in Java technology that provides naming and directory functionality to applications written in the Java programming language. It is designed especially for the Java platform using Java's object model. Using JNDI, applications based on Java technology can store and retrieve named Java objects of any type. In addition, JNDI provides methods for performing standard directory operations, such as associating attributes with objects and searching for objects using their attributes.
+
+JNDI is also defined independent of any specific naming or directory service implementation. It enables applications to access different, possibly multiple, naming and directory services using a common API. Different naming and directory service providers can be plugged in seamlessly behind this common API. This enables Java technology-based applications to take advantage of information in a variety of existing naming and directory services, such as LDAP, NDS, DNS, and NIS(YP), as well as enabling the applications to coexist with legacy software and systems.
+
+##Config. steps for the pooled connectivity
+
+MUST Copy JDBC drvr jar(mysql connector jar) to tomcat-home/lib
+0. stop the srvr.
+Ref Doc : <TomCat_Home>\webapps\docs\jndi-datasource-examples-howto.html
+
+1. Open context.xml from <meta-inf> folder
+& add Resource tag under Context tag.
+
+<Resource name="jdbc/mysql_pool" auth="Container" type="javax.sql.DataSource"
+		initialSize="1" maxActive="2" maxIdle="1" maxWait="-1" username="root"
+		password="root" driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/test"
+		removeAbandoned="true" />
+
+
+2. Open your web-appln's web.xml(WebContent\web-inf\web.xml)
+
+copy the Resource - ref. tag in web.xml
+
+eg :
+<resource-ref>
+ <description>Oracle Datasource example</description>
+ <res-ref-name>jdbc/ora_pool</res-ref-name>
+ <res-type>javax.sql.DataSource</res-type>
+ <res-auth>Container</res-auth>
+</resource-ref>
+
+ENSURE : res-ref-name matches with Resource name added in server.xml
+
+Info about resource settings
+1. maxActive: Maximum number of database connections in pool. 
+
+2. maxIdle: Maximum number of idle database connections to retain in pool.
+        
+3. maxWait: Maximum time to wait for a database connection to become available
+         in ms, An Exception is thrown if
+         this timeout is exceeded.  Set to -1 to wait indefinitely.
+         
+4. initialSize -- initial size of the pool at start up
+5. removeAbondened -- true(def=false) -- if there are any abondened cns --- then they are re-cycled to pool after tmout(def val=300 sec)
+
+## Java Annotation
+
+Annotation is a tag that represents the metadata. 
+Meta data meant for java tools
+
+It can be present at different levels.
+class, interface, methods or fields
+
+It indicates some additional information that can be used by java compiler and JVM.
+
+2 Types 
+
+1. Built-In Annotations  2. Custom Annotations
+
+There are several built-in annoations. 
+
+Built in annotations meant for java code
+Eg: 
+
+@Override
+@SuppressWarnings
+@Deprecated
+@FunctionalInterface
+
+
+Built-In Annotations that are applied to other annotations (to supply more information of the annotation itself)
+
+1. @Target -- target of the annotation
+Can have typically these values --CONSTRUCTOR,LOCAL_VARIABLE,FIELD,METHOD,PARAMETER etc.
+2. @Retention -- Specifies Retention policy of the annotation.
+Can have typically these values
+SOURCE
+Annotations are to be discarded by the compiler (i.e don't appear in .class file).
+eg : @Override
+
+CLASS --Annotations are kept in the class file by the compiler but not retained by the VM at run time. This is the default behavior.
+
+
+RUNTIME -- Annotations kept in the class file by the compiler and retained by the JVM at run time, so as to read using reflection
+eg : @Entity , @WebServlet , @Repository
+
+
+@Inherited --
+Indicates that an annotation type is automatically inherited.
+When you apply this annotation to any other annotation i.e. @MyCustomAnnotation; and @MyCustomAnnotation is applied of any class MySuperClass then @MyCustomAnnotation will be available to all sub classes of MySuperClass as well.
+
+@Documented
+This annotation indicates that new annotation should be included into java documents generated by java document generator tools.
+
+
+Meaning of annotations
+
+@Override
+
+@Override annotation assures that the subclass or implementation class method is overriding/implementing the parent class / interface method. If it is not so, compile time error occurs.
+
+@SuppressWarnings
+
+@SuppressWarnings annotation: is used to suppress warnings issued by the compiler. 
+
+eg : @SuppressWarnings("serial")
+
+or
+@SuppressWarnings("unchecked")
+
+
+
+@Deprecated
+
+@Deprecated annoation marks that this method is deprecated so compiler prints warning. It informs user that it may be removed in the future versions. So, it is better not to use such methods.
+
+----------------------------
+Custom Annotations
+Java Custom Annotation
+
+Java Custom annotations or Java User-defined annotations are easy to create and use. The @interface element is used to declare an annotation. For example:
+
+@interface MyAnnotation{}  
+
+Here, MyAnnotation is the custom annotation name.
+
+Points to remember for java custom annotation signature (methods in i/f)
+
+
+Method should not have any throws clauses
+Method should return one of the following: primitive data types, String, Class, enum or array of these data types.
+Method should not have any parameter.
+We should attach @ just before interface keyword to define annotation.
+It may assign a default value to the method.
+
+Types of Annotation
+
+There are three types of annotations.
+
+Marker Annotation
+Single-Value Annotation
+Multi-Value Annotation
+
+1) Marker Annotation
+
+An annotation that has no method, is called marker annotation. For example:
+
+@interface MyAnnotation{}  
+
+eg : @Override , @Deprecated are marker annotations.
+
+2) Single-Value Annotation
+
+An annotation that has one method, is called single-value annotation. For example:
+
+@interface MyAnnotation{  
+int value();  
+}  
+ 
+We can provide the default value also. For example:
+
+@interface MyAnnotation{  
+int value() default 0;  
+}  
+
+
+How to apply Single-Value Annotation
+
+eg :
+
+@MyAnnotation(value=10)  
+
+The value can be anything.
+
+3) Mulit-Value Annotation
+
+An annotation that has more than one method, is called Multi-Value annotation. 
+For example:
+
+@interface MyAnnotation{  
+ int value1();  
+ String value2();  
+ String value3();  
+  
+}  
+
+We can provide the default value also. For example:
+
+@interface MyAnnotation{  
+int value1() default 1;  
+String value2() default "";  
+String value3() default "xyz";  
+}  
+
+How to apply Multi-Value Annotation
+
+
+@MyAnnotation(value1=10,value2="abc",value3="xyz")  
+
+
+Built-in Annotations used in custom annotations in java
+
+@Target
+@Retention
+@Inherited
+@Documented
+
+
+Example to specify annoation for a class (i.e before a class definition)
+
+@Target(ElementType.TYPE)  
+@interface MyAnnotation{  
+int value1();  
+String value2();  
+}  
+
+Example to specify annoation for a class, methods or fields
+
+@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD})  
+@interface MyAnnotation{  
+int value1();  
+String value2();  
+}  
+
+@Retention
+
+@Retention annotation is used to specify to what level annotation will be available.
+
+RetentionPolicy	Availability
+RetentionPolicy.SOURCE	refers to the source code, discarded during compilation. It will not be available in the compiled class.
+RetentionPolicy.CLASS	refers to the .class file, available to java compiler but not to JVM . It is included in the class file.
+RetentionPolicy.RUNTIME	refers to the runtime, available to java compiler and JVM .
+
+Example to specify the RetentionPolicy
+
+@Retention(RetentionPolicy.RUNTIME)  
+@Target(ElementType.TYPE)  
+@interface MyAnnotation{  
+int value1();  
+String value2();  
+}  
+
+
+How built-in annotations are used in real scenario?
+
+In real scenario, java programmer only needs to apply annotation. You don't need to create and access annotation. Creating and Accessing annotation is performed by the implementation provider. On behalf of the annotation, java compiler or JVM performs some additional operations.
+But in case of custom validations in spring , you can easily create an annotation & use it.
+
+Use Cases for Annotations
+Annotations are very powerful and Frameworks like spring and Hibernate use Annotations very extensively for logging and validations. Annotations can be used in places where marker interfaces are used. Marker interfaces are for the complete class but you can define annotation which could be used on individual methods for example whether a certain method is exposed as service method or not.
+
+
+
+
+
+## Spring 5 DB  Transactions 
+Required JARS ---org.springframework.transaction & aop jars
+Basics
+Benefits of Spring Transaction Management
+
+    * Very easy to use, does not require any underlying transaction API knowledge
+    * Your transaction management code will be independent of the transaction technology
+    * Both annotation- and XML-based configuration
+    * It does not require to run on a server - no server needed
+
+
+What is a Transaction?
+A Transaction is a unit of work performed on the database and treated in a reliable way independent of other transaction. In database transaction processing ACID property refers to the Atomicity, Consistency, Isolation, Durability respectively.
+
+Atomicity- This property says that all the changes to the data is performed as if they form single operation. For example suppose in a bank application if a fund transfer from one account to another account the atomicity property ensures that is a debit is made successfully in one account the corresponding credit would be made in other account.
+
+Consistency- The consistency property of transaction says that the data remains in the consistence state when the transaction starts and ends. for example suppose in the same bank account, the fund transfer from one account to another account, the consistency property ensures that the total value(sum of both account ) value remains the same after the transaction ends.
+
+Isolation- This property says that, the intermediate state of transaction are hidden/ invisible to another transaction process. 
+
+Durability- The Durability says that when the transaction is completed successfully, the changes to the data  persist and are not un-done, even in the event of system failure.A transaction is not considered durable until it commits. A system failure entails a database recovery, which includes a rollback procedure for all uncommitted transactions, ultimately leaving the database in a consistent state.
+
+Transaction Handling 
+
+Now, in Java you can handle transactions with plain SQL, with plain JDBC (a bit higher level), using Hibernate (or any other ORM library), or on an even higher level - with EJB or, finally, Spring!
+
+EJBs require an application server, but spring based jdbc application doesn't.
+
+Ways of Transaction Handling
+Programmatic vs. Declarative
+
+Spring offers two ways of handling transactions: programmatic and declarative. If you are familiar with EJB transaction handling, this corresponds to bean-managed and container-managed transaction management.
+
+Programmatic means you have transaction management code surrounding your business code. That gives you extreme flexibility, but is difficult to maintain and too much of boilerplate code.
+
+Declarative means you separate transaction management from the business code. You only use annotations or XML based configuration.
+
+As a summary
+
+    * programmatic management is more flexible during development time but less flexible during application life
+    * declarative management is less flexible during development time but more flexible during application life
+
+Global transactions Vs Local Transactions
+
+Global transactions enable you to work with multiple transactional resources, typically multiple relational databases . The application server manages global transactions through the JTA. (complex to use through UserTransaction object)
+
+Local Transactions
+Local transactions are resource-specific, such as a transaction associated with a JDBC connection. Local transactions may be easier to use, but have significant disadvantages as they cannot work across multiple transactional resources.
+
+
+Spring's solution
+Spring resolves the disadvantages of global and local transactions. It enables application developers to use a consistent programming model in any environment. You write your code once, and it can benefit from different transaction management strategies in different environments. It supports both declarative and programmatic transaction management. Most users prefer declarative transaction management.
+
+API details
+1. The key to the Spring transaction abstraction is the notion of a transaction strategy. Its the central interface in Spring's transaction infrastructure. A transaction strategy is defined by the org.springframework.transaction.PlatformTransactionManager
+interface: which has TransactionStatus getTransaction(TransactionDefinition td) throws TransactionExc
+TransactionException --- As in  Spring's philosophy, the TransactionException that is thrown by any of the PlatformTransactionManager interface's methods ,  is unchecked  Transaction infrastructure failures are generally  fatal , managed by spring Tx frmwork & developer is NOT forced to handle this.
+
+The TransactionDefinition interface specifies:
+i.e @Transactional annotation supports 5 parameters.
+
+ Isolation: The degree to which this transaction is isolated from the work of other transactions. 
+Concurrent transactions cause problems that might be difficult to investigate.
+
+    * Lost update - if two transactions are updating different columns of the same row, then there is no conflict. The second update blocks until the first transaction is committed and the final result reflects both update changes.
+BUT if the two transactions want to change the same columns, the second transaction will overwrite the first one, therefore loosing the first transaction update.
+    * Dirty read - reading changes that are not yet committed
+    * Unrepeatable read - a transactions reads twice the same row, getting different data each time
+    * Phantom read - similar to the previous one, except that the number of rows changed
+
+
+Now, the perfect solution to these problems is maximum isolation, but in reality this would cost too much resources and could lead to deadlocks. So, instead, you will set one of five isolation levels (where the fifth one is actually the maximum isolation level):
+
+
+Supported levels
+ISOLATION_DEFAULT -- Use the default isolation level of the underlying datastore.
+
+ISOLATION_READ_UNCOMMITTED --- Indicates that dirty reads, non-repeatable reads and phantom reads can occur.
+
+ISOLATION_READ_COMMITTED --- Indicates that dirty reads are prevented; non-repeatable reads and phantom reads can occur.
+
+ISOLATION_REPEATABLE_READ -- Indicates that dirty reads and non-repeatable reads are prevented; phantom reads can occur.
+
+ISOLATION_SERIALIZABLE -- Indicates that dirty reads, non-repeatable reads and phantom reads are prevented.
+
+
+ Transaction Propagation
+
+Whenever a one transactional method calls other transactional mehod(NOT from the Same class) , a decision is made - what to do with the transaction. Create a new one? Use an existing one if it exists, otherwise create a new one? Use an existing one only if it exists, otherwise fail?
+eg :
+UserController : 
+@AutoWired
+private UserService userService;
+
+@Transactional(propagation=Propagation.REQUIRED) //tx1
+request handling method : placeOrder(...) {
+userService method is invoked.
+}
+
+In UserService : @Transactional
+DAO : dependency
++ OrderService : @Transactional(propagation=Propagation.REQUIRED) : doPayment //tx1
+
+
+
+
+Supported behaviors ---
+
+MANDATORY --Supports a current transaction; throws an exception if no current transaction exists.
+
+REQUIRED -- default behavior.
+          Supports a current transaction; creates a new one if none exists.
+
+
+NESTED ---Executes within a nested transaction if a current transaction exists, otherwise same as REQUIRED 
+
+SUPPORTS
+          Supports a current transaction; executes non-transactionally if none exists.
+
+REQUIRES_NEW
+          Creates a new transaction, suspending the current transaction if one exists.
+
+
+NEVER
+          Does not support a current transaction; throws an exception if a current transaction exists.
+
+NOT_SUPPORTED
+          Does not support a current transaction;  always executes non-transactionally.
+
+
+ Timeout: in seconds .How long this transaction runs before timing out and being rolled back automatically by the underlying transaction infrastructure.
+Default value = -1 , indefinite w/o time out
+Otherwise specify value 
+eg 
+@Transactional(timeout=100)
+
+
+ Read-only status: A read-only transaction can be used when your code reads but does not modify data.
+Read-only transactions can be a useful optimization in some cases, such as when you are using Hibernate.
+eg -- @Transactional(readOnly = true)
+default is false.
+
+Rollback behavior
+With Spring transaction management the default behavior for automatic rollback is this: Only unchecked exceptions cause a rollback. Unchecked exceptions are RuntimeExceptions and Errors.
+But can be changed.
+eg --
+@Transactional(rollbackFor = IOException.class, noRollbackFor = RuntimeException.class)
+public void doSomething(...)
+
+
+Implementation steps & concept for annotation based declarative transaction management.
+1. For plain JDBC implementations of PlatformTransactionManager --- use DataSourceTransactionManager --- implementation class for a single JDBC DataSource. 
+
+2. Declare the same in spring configuration xml file.
+eg --
+<!-- tx manager bean -->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+p:dataSource-ref="dataSource">
+</bean>
+
+3. To enable annotated transaction support , add transaction namespace(tx) & add following
+<tx:annotation-driven transaction-manager="transactionManager" />
+Note : can even skip attribute transaction-manager, if id of Tx Mgr bean is transactionManager
+
+This completes configuration steps
+
+4. In service layer beans (typically annotated with @Service) , add method level annotation @Transactional along with suitable properties.
+
+
+
+
+
+
+
+
+
+## Basics of java mail
+  
+
+The JavaMail is an API that is used to compose, write and read electronic messages (emails).
+
+The JavaMail API provides protocol-independent and platform independent framework for sending and receiving mails.
+
+The javax.mail and javax.mail.activation packages contains the core classes of JavaMail API.
+
+The JavaMail facility can be applied to many events. It can be used at the time of registering the user (sending notification such as thanks for your interest to my site), forgot password (sending password to the users email id), sending notifications for important updates etc. So there can be various usage of java mail api.
+
+
+
+
+Protocols used in JavaMail API
+There are some protocols that are used in JavaMail API.
+
+    SMTP
+    POP
+    IMAP
+    MIME
+    NNTP and others
+
+SMTP
+
+SMTP is an acronym for Simple Mail Transfer Protocol. It provides a mechanism to deliver the email. We can use Apache James server, Postcast server, cmail server etc. as an SMTP server. But if we purchase the host space, an SMTP server is bydefault provided by the host provider. For example, my smtp server is mail.abc.com. If we use the SMTP server provided by the host provider, authentication is required for sending and receiving emails.
+POP
+
+POP is an acronym for Post Office Protocol, also known as POP3. It provides a mechanism to receive the email. It provides support for single mail box for each user. We can use Apache James server, cmail server etc. as an POP server. But if we purchase the host space, an POP server is bydefault provided by the host provider. For example, the pop server provided by the host provider for my site is mail.abc.com. This protocol is defined in RFC 1939.
+IMAP
+
+IMAP is an acronym for Internet Message Access Protocol. IMAP is an advanced protocol for receiving messages. It provides support for multiple mail box for each user ,in addition to, mailbox can be shared by multiple users. It is defined in RFC 2060.
+MIME
+Multiple Internet Mail Extension (MIME) tells the browser what is being sent e.g. attachment, format of the messages etc. It is not known as mail transfer protocol but it is used by your mail program.
+NNTP and Others
+
+There are many protocols that are provided by third-party providers. Some of them are Network News Transfer Protocol (NNTP), Secure Multipurpose Internet Mail Extensions (S/MIME) etc.
+JavaMail Architecture
+
+The java application uses JavaMail API to compose, send and receive emails. The JavaMail API uses SPI (Service Provider Interfaces) that provides the intermediatory services to the java application to deal with the different protocols. Let's understand it with the figure given below:
+JavaMail API Architecture
+JavaMail API Core Classes
+
+There are two packages that are used in Java Mail API: javax.mail and javax.mail.internet package. These packages contains many classes for Java Mail API. They are:
+
+    javax.mail.Session class
+    javax.mail.Message class
+    javax.mail.internet.MimeMessage class
+    javax.mail.Address class
+    javax.mail.internet.InternetAddress class
+    javax.mail.Authenticator class
+    javax.mail.PasswordAuthentication class
+    javax.mail.Transport class
+    javax.mail.Store class
+    javax.mail.Folder class etc.
+
+
+------------------------
+java send mail explaination
+
+Before explaining the Java program to send email, I will explain the classes and methods used here from Java Mail API, that will provide some background knowledge about the stuff here. This code is configured to send email from Gmail to any email service provider by using Java programming language. If you wish to send email from any other email service provider, then you need to change host (d_host) and port number (d_port) corresponding to the service provider. This requires Mail.jar to be downloaded which can be done here
+Authenticator
+
+This class obtains authentication for network connection. Authentication can be done by means of providing username, password. When authentication is required, the system will invoke a method on the subclass getPasswordAuthentication() and this will query about the authentication to number of inherited methods and returns the result.  
+
+MIME Message
+
+                This class represents MIME style email message.  This class provides methods to set various stuffs for sending emails. Some basic methods required for sending emails are setSubject, setFrom, addRecipient, setText these are self-explanatory by name.  Even bigger emails with HTML content can be sent through setContent method. Emails can also be sent to multiple people through addRecipients method. There are lot more interesting methods inside MIME Message.
+
+Transport.send
+
+                Transport is an abstract class that that models a message transport.  Send is a static method that sends the message to specified address along with data stored in MIME Message. If any invalid email is found it returns SendFailedException
+
+JavaMail.java  - Download
+
+package javamail;
+
+import javax.mail.*;
+import javax.mail.internet.*;
+import java.util.*;
+
+public class JavaMail {    
+    String d_email = "fromAddress@gmail.com",
+            d_password = "password", //your email password
+            d_host = "smtp.gmail.com",
+            d_port = "465",
+            m_to = "ToAddress", // Target email address
+            m_subject = "Testing",
+            m_text = "Hey, this is a test email.";
+    
+    public JavaMail() {
+        Properties props = new Properties();
+        props.put("mail.smtp.user", d_email);
+        props.put("mail.smtp.host", d_host);
+        props.put("mail.smtp.port", d_port);
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.auth", "true");
+        //props.put("mail.smtp.debug", "true");
+        props.put("mail.smtp.socketFactory.port", d_port);
+        props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.socketFactory.fallback", "false");
+        try {
+            Authenticator auth = new SMTPAuthenticator();
+            Session session = Session.getInstance(props, auth);     
+            MimeMessage msg = new MimeMessage(session);
+            msg.setText(m_text);
+            msg.setSubject(m_subject);
+            msg.setFrom(new InternetAddress(d_email));
+            msg.addRecipient(Message.RecipientType.TO, new InternetAddress(m_to));
+            Transport.send(msg);
+        } catch (Exception mex) {
+            mex.printStackTrace();
+        }
+    }
+   
+    public static void main(String[] args) {
+        JavaMail blah = new JavaMail();
+    }
+  
+    private class SMTPAuthenticator extends javax.mail.Authenticator {
+        public PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(d_email, d_password);
+        }
+    }
+}
+
+
+
+ 
+
+Possible Exceptions:
+
+1) Unknown SMTP host: smtp.gmail.com - This error might occur if you do not have a valid internet connection.
+2) Could not connect to SMTP host: smtp.gmail.com  - If you face this error, first disable your firewall and try running the code, still if you face this issue, then check your Antivirus settings.
+
+
+
+### Java mail demo tip
+In spring sending mail -- in case of  AuthenticationException
+For security purposes -By default, gmail does not allow less secure apps to get authenticated. You need to turn on the option in you gmail account to allow less secure apps to get authenticated.
+HOW ??
+Ans  --
+login to gmail
+then goto this url --- https://www.google.com/settings/security/lesssecureapps
+& turn on(radio btn) access allowed for less secure apps
+& then test send mail demo of spring 
+
+##  Internationalization -
+- i18n -- Technique for developing applications that support multiple languages, data formats  , currency formats , date formats etc without having to re-write view generation logic.
+
+Localization --- l10n --- technique for adapting an internationalized appln to support a specific locale.
+Locale = specific geographical,political or cultural region.
+
+
+
+Steps for i18n
+1. Identify the locales
+
+2. Create text-based property file -- one per each locale. ---store it under <src> or <resources>
+-----------------
+For making your application support different locales, we need to create locale specific properties file. The file names follow the pattern of bundle name with language code and country code, for example ApplicationMessages_en_US.properties.
+
+Once the property files for specific locales are ready, all you need to do is initialize the resource bundle with correct Locale. 
+API
+Java provides two classes java.util.ResourceBundle and java.util.Locale that are used for this purpose. 
+ResourceBundle reads the locale specific property file and you can get the locale specific value for any key.
+
+Use case 
+
+This is very helpful in making your web application texts locale specific, you can get the locale information from the HTTP request and generate the dynamic page with that locale resource bundle files. You can also provide option to user to chose the locale and update the labels dynamically.
+
+Spring MVC i18n steps (ref : eclipse project : spring_demo)
+ 
+1.. Add locale resolver bean definition in spring-servlet.xml file.
+
+SessionLocaleResolver
+
+SessionLocaleResolver resolves locales by inspecting a predefined attribute in a users session. If the session attribute doesnt exist, this locale resolver determines the default locale from the accept-language HTTP header.
+
+<bean id="localeResolver" 		class="org.springframework.web.servlet.i18n.SessionLocaleResolver" />
+
+2. Add mvc interceptors for detecting change in locale, in spring-servlet.xml
+ 
+LocaleChangeInterceptor interceptor detects if a special parameter is present in the current HTTP request. The parameter name can be customized with the paramName property of this interceptor. If such a parameter is present in the current request, this interceptor changes the users locale according to the parameter value.
+
+
+<mvc:interceptors>
+<!-- Locale change interceptor -->
+<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"
+p:paramName="locale123" />
+</mvc:interceptors>
+
+Above 2 can be either declared in spring-servlet.xml or also in imported xml file.
+
+
+3.  Create copies of message based property files 
+
+4.  Create JSP with links to add support for various locales -- using same param name
+<spring:url var="url" value="test_locale">
+<spring:param name="locale123">en</spring:param>
+</spring:url>
+<a href="${url}">English</a>
+
+<spring:url var="url" value="test_locale">
+<spring:param name="locale123">mr_IN</spring:param>
+</spring:url>
+<a href="${url}">Marathi</a>
+
+5. Use <spring:message code="propName"/>
+eg : <spring:message code="user.email" />
+
+
+## Why Filters  ?
+
+1. Provides re-usability.
+Meaning --- They provide the ability to encapsulate recurring tasks(=cross cutting concerns) in reusable units.
+They provide clear cut separation between B.L & cross cutting concerns.
+ 
+2. Can dynamically intercept req/resp to dyn or static content
+
+What is Filter?
+
+Dynamic web component just like servlet or 
+JSP. Resides within web-appln.(WC)
+Filter life-cycle managed by WC
+
+
+It  performs filtering tasks on either the request to a resource (a servlet,JSP or static content), or on the response from a resource, or both.
+
+It can  dynamically intercepts requests and responses . 
+
+Usage of Filters 
+1. Authentication Filters
+2. Logging  Filters
+3. Image conversion Filters
+4. Data compression Filters
+5. Encryption Filters 
+6. Session Check filter
+
+How to create Filter Component?
+1. Create Java class imple. javax.servlet.Filter i/f
+2. Implements 3 life-cycle methods
+2.1 public void init(FilterConfig filterConfig)
+          throws ServletException
+
+Above called by WC --- only once during filter creation & initialization.(@appln start up time)
+2.2 
+void doFilter(ServletRequest request,ServletResponse response,FilterChain chain)  throws IOException, ServletException
+
+Invoked by WC -- per every rq & resp processing time.
+
+Here u can do pre-processing of req, then invoke chain.doFilter -- to invoke next component of filter chain --- finally it invokes service method of JSP/Servlet --- on its ret path visits filter chain in opposite manner & finally renders response to clnt browser.
+
+2.3
+public void destroy() ---invoked by WC at the  end of filter life cycle.
+Triggers --- server shut down/re-dploy/un deploy
+
+How to deploy a Filter component ?
+1. Annotation -- @WebFilter (class level annotation)
+OR
+2. XML tags (in web.xml)
+<filter>
+ <filter-name>abc</..>
+ <filter-class>filters.AuthenticatioFilter</...>
+ <init-param>
+  <param-name>nm1</..>
+  <param-value>val1</..>
+ </...>
+</filter>
+<filter-mapping>
+ <filter-name>abc</..>
+ <url-pattern>/*</...>
+</filter-mapping>
+
+
+---------------------------------
+
+Detailed Description ---
+Filters typically do not themselves create responses, but instead provide universal functions that can be "attached" to any type of servlet or JSP page.
+
+
+
+Filters are important for a number of reasons. First, they provide the ability to encapsulate recurring tasks in reusable units. Organized developers are constantly on the lookout for ways to modularize their code. Modular code is more manageable and documentable, is easier to debug, and if done well, can be reused in another setting.
+
+Second, filters can be used to transform the response from a servlet or a JSP page. A common task for the web application is to format data sent back to the client. Increasingly the clients require formats (for example, WML) other than just HTML. To accommodate these clients, there is usually a strong component of transformation or filtering in a fully featured web application. Many servlet and JSP containers have introduced proprietary filter mechanisms, resulting in a gain for the developer that deploys on that container, but reducing the reusability of such code. With the introduction of filters as part of the Java Servlet specification, developers now have the opportunity to write reusable transformation components that are portable across containers. 
+
+
+
+# Design patterns
+
+There are common problems faced by programmers all over.
+Not a domain specific problem --asso with banking / insurance or manufacturing or pharma etc.
+
+BUT if its a generic problem(eg : writing a web app , separating cross cutting concerns ) --then there are standard solutions to these common problems -- these are nothing but the design patterns---best practises.
+
+Design Patterns -- Started with Gang Of Four in 1994 --but being modified/enhanced since then.
+Summary was
+1. Always prefer composition over inheritance
+2. Always code for i/f & not imple.
+
+In a nut shell 
+Good programming practises --to be followed by prog community.
+
+Should u know about all of  them ? -- 100 %
+Should u apply all of them -- NO ---nobody does that--you should only use those patterns which your appln demands.
+
+They are categorised into 3 parts
+1. Creational design patterns  -- best practises for object creation
+eg : singleton , factory , builder
+2. Structural  -- best practises for composition of objects to create a larger application
+eg : adapter
+3. Behavioural -- best practises for communication between the objects (w/o any composition)
+
+You can think of additional category as 
+4. J2EE design patterns  -- MVC , Front Controller , DAO , DTO 
+
+
+Pattern examples 
+1. singleton 
+Typically all spring beans , used are singleton.
+
+2. Factory
+eg : o.s.bean.factory.BeanFactory <----- ApplicationContext <----- ClassPathXmlApplicationContext
+In above case , SC is following factory pattern --provider of the rdymade spring beans (via ctx.getBean method)
+Another eg : Hibernate's session factory
+
+2.5 Builder -- 
+Use case --When there are too many parameters needed to be passed to a class constructor, instead use builder pattern.
+
+
+Structural Patterns 
+
+3. Adapter design pattern is one of the structural design pattern and its used so that two unrelated interfaces can work together. The object that joins these unrelated interface is called an Adapter.
+eg :  Mobile charger works as an adapter between mobile charging socket and the wall socket.
+1. We will have two classes  Volt (to measure voltage) and Socket (producing constant voltage of 230V).
+2. Now  build an adapter that can produce 3 volts, 12 volts and default 230 volts. So  create an adapter interface with these methods.
+3. Object adapter implementation --based on composition
+4. A tester
+-------------------
+4. Facade Design Pattern -- structural design pattern
+
+Suppose we have an application with set of interfaces to use MySql/Oracle database and to generate different types of reports, such as HTML report, PDF report etc.
+
+So we will have different set of interfaces to work with different types of database. Now a client application can use these interfaces to get the required database connection and generate reports.
+
+But when the complexity increases or the interface behavior names are confusing, client application will find it difficult to manage it.
+
+So we can apply Facade design pattern here and provide a wrapper interface on top of the existing interface to help client application.
+
+eg : 
+1. Two helper interfaces, -- namely MySqlHelper and OracleHelper.
+2. Facade pattern interface 
+3. Tester
+
+----------------------
+Proxy Design pattern is one of the Structural design pattern
+Provide a surrogate(substitute) or placeholder for another object to control access to it.
+eg : AOP proxies.
+Refer to example of tx manager in spring framework
+eclipse project --test_aop_simple
+--------------------
+Behavioral Design patterns
+
+1. Template Method is a behavioral design pattern. 
+Template Method design pattern is used to create a method stub and deferring some of the steps of implementation to the subclasses.
+eg : Spring example  -- RestTemplate
+
+----------------
+2. A Command pattern is an object behavioral pattern
+
+Allows us to achieve complete decoupling between the sender and the receiver.
+
+A sender  -- is an object that invokes an operation
+A receiver is an object that receives the request to execute a certain operation.
+
+With decoupling, the sender has no prior knowledge of the Receiver's interface. 
+
+Here request = command that is to be executed. 
+The Command pattern also allows us to vary when and how a request is fulfilled. Thus :  a Command pattern provides us flexibility as well as extensibility.
+eg :
+1. 2 electrical instruments to operate --fan & light bulb
+2. Command i/f
+3. Command imple classes
+4. Switch -- invokes command on the receiver object
+5. tester
+
+
+# Interview question
+Why have you used spring framework in your project ?
+
+Spring : Design Patterns Used in Java Spring Framework
+
+1.
+Dependency injection/ or IoC (inversion of control)  Is the main principle behind loose coupling of layers.
+
+2. Factory  Spring uses factory pattern to create objects of beans using Application Context reference
+eg : refer to eg code in spring & Java SE (ApplicationContext & its getBean method)
+
+
+3. Proxy  used heavily in AOP, and remoting.
+eg : @Transactional class is proxied by spring as an example of AOP proxy
+
+4. Singleton  By default, beans defined in spring config file (xml) are only created once. No matter how many calls were made using getBean() method, it will always have only one bean. This is because, by default all beans in spring are singletons.
+This can be overridden by using Prototype bean scope.Then spring will create a new bean object for every request.
+
+5. Model View Controller  The advantage with Spring MVC is that your controllers are POJOs as opposed to being servlets. This makes for easier testing of controllers. One thing to note is that the controller is only required to return a logical view name, and the view selection is left to a separate ViewResolver. This makes it easier to reuse controllers for different view technologies.
+
+6. Front Controller  Spring provides DispatcherServlet to ensure an incoming request gets dispatched to your controllers.
+
+7. View Helper  Spring has a number of custom JSP tags, and view resolvers, to assist in separating code(B.L)  from presentation in views.
+
+8. Template method  used extensively to deal with boilerplate repeated code (such as closing connections cleanly, etc..). For example JdbcTemplate, JmsTemplate,JdbcTemplate,JpaTemplate,RestTemplate
+
